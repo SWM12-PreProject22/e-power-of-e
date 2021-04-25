@@ -3,7 +3,7 @@ const libKakaoWork = require('../../libs/kakaoWork');
 const emptyList = [];
 const topicList = [
   {
-    key: 0,
+    id: 0,
     title: 'Spring?!',
     mentor: '최길동 멘토님',
     description:
@@ -11,7 +11,7 @@ const topicList = [
     userIdList: ['2604988', '2633331', '2633336'],
   },
   {
-    key: 1,
+    id: 1,
     title: 'docker 기초',
     mentor: '홍길동 멘토님',
     description:
@@ -19,7 +19,7 @@ const topicList = [
     userIdList: [1, 2, 3, 4],
   },
   {
-    key: 2,
+    id: 2,
     title: 'aws 설정',
     mentor: '박길동 멘토님',
     description:
@@ -27,7 +27,7 @@ const topicList = [
     userIdList: [1, 2, 3],
   },
   {
-    key: 3,
+    id: 3,
     title: '멋진 개발자 되는 법',
     mentor: '이길동 멘토님',
     description:
@@ -35,7 +35,7 @@ const topicList = [
     userIdList: [1, 2],
   },
   {
-    key: 4,
+    id: 4,
     title: 'pm은 무엇인가',
     mentor: '김길동 멘토님',
     description:
@@ -44,60 +44,91 @@ const topicList = [
   },
 ];
 
-const generateDetailBlock = (topic) => {
-  const baseBlock = [
+const generateDetailBlock = (actions) => {
+  const headerBlock = [
     {
       type: 'header',
       text: '멘토링 동료 찾기',
       style: 'blue',
     },
-    {
-      type: 'description',
-      term: '주제',
-      content: {
-        type: 'text',
-        text: topic.title,
-        markdown: false,
+  ];
+  let topics = [topicList[actions.select1]];
+  if (actions.select2 && actions.select1 != actions.select2)
+    topics.push(topicList[actions.select2]);
+
+  var mainBlock = [];
+  topics.forEach((topic) => {
+    const block = [
+      {
+        type: 'description',
+        term: '주제',
+        content: {
+          type: 'text',
+          text: topic.title,
+          markdown: false,
+        },
+        accent: true,
       },
-      accent: true,
-    },
-    {
-      type: 'description',
-      term: '희망 멘토',
-      content: {
-        type: 'text',
-        text: topic.mentor,
-        markdown: false,
+      {
+        type: 'description',
+        term: '희망 멘토',
+        content: {
+          type: 'text',
+          text: topic.mentor,
+          markdown: false,
+        },
+        accent: true,
       },
-      accent: true,
-    },
-    {
-      type: 'text',
-      text: topic.description,
-      markdown: true,
-    },
-    {
-      type: 'button',
-      text: '등록하기',
-      style: 'primary',
-      action_type: 'submit_action',
-      action_name: 'register_topic',
-      value: `{"type":"mentoring", "payload":"${topic.key}"}`,
-    },
+      {
+        type: 'text',
+        text: topic.description,
+        markdown: true,
+      },
+      {
+        type: 'button',
+        text: '등록하기',
+        style: 'primary',
+        action_type: 'submit_action',
+        action_name: 'register_topic',
+        value: `{"type":"mentoring", "payload":"${topic.id}"}`,
+      },
+      {
+        type: 'divider',
+      },
+    ];
+    mainBlock = [...mainBlock, ...block];
+  });
+
+  const footerBlock = [
     {
       type: 'button',
       text: '다른 주제 보기',
       style: 'default',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"get_topic_list"}`,
+    },
+    {
+      type: 'button',
+      text: '새로 등록하기',
+      style: 'default',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"make_new_topic"}`,
+    },
+    {
+      type: 'button',
+      text: '메인으로 돌아가기',
       action_type: 'submit_action',
-      action_name: 'entry',
-      value: `{"type":"mentoring"}`,
+      action_name: 'to_main',
+      value: '{"type": "main"}',
+      style: 'default',
     },
   ];
-  return baseBlock;
+  return [...headerBlock, ...mainBlock, ...footerBlock];
 };
-const generateOptionBlock = (topicList) => {
+
+const generateIntroBlock = (topicList) => {
   if (topicList.length == 0) {
-    const baseBlock = [
+    const block = [
       {
         type: 'header',
         text: '멘토링 동료 찾기',
@@ -106,7 +137,7 @@ const generateOptionBlock = (topicList) => {
       {
         type: 'text',
         text:
-          '멘토 특강을 신청하기 위해 동료를 모을 수 있어요. 5명이 되면 단톡방이 생성됩니다!',
+          '멘토 특강을 신청하기 위해 주제를 등록하고 동료를 모을 수 있어요. 5명이 모이면 단톡방이 생성됩니다.',
         markdown: true,
       },
       {
@@ -114,22 +145,29 @@ const generateOptionBlock = (topicList) => {
       },
       {
         type: 'text',
-        text: '아직 등록된 주제가 없네요. 새로운 주제를 등록해보세요!',
+        text: '아직 등록된 주제가 없어요. 새로운 주제를 등록해보세요!',
         markdown: true,
       },
       {
         type: 'button',
         text: '새로 등록하기',
-        style: 'default',
+        style: 'primary',
         action_type: 'call_modal',
-        action_name: 'make_new_topic',
-        value: `{"type":"mentoring"}`,
+        value: `{"type":"mentoring", "payload":"make_new_topic"}`,
+      },
+      {
+        type: 'button',
+        text: '메인으로 돌아가기',
+        action_type: 'submit_action',
+        action_name: 'to_main',
+        value: '{"type": "main"}',
+        style: 'default',
       },
     ];
-    return baseBlock;
+    return block;
   }
 
-  const headerBlock = [
+  const block = [
     {
       type: 'header',
       text: '멘토링 동료 찾기',
@@ -137,34 +175,15 @@ const generateOptionBlock = (topicList) => {
     },
     {
       type: 'text',
-      text:
-        '멘토 특강을 신청하기 위해 동료를 모을 수 있어요. 5명이 되면 단톡방이 생성됩니다!',
+      text: `멘토 특강을 신청하기 위해 동료를 모을 수 있어요. 5명이 되면 단톡방이 생성됩니다. \n\n현재 등록된 주제는 총 ${topicList.length}개 입니다. 주제를 선택하면 자세한 정보를 보여줄게요!`,
       markdown: true,
     },
     {
-      type: 'divider',
+      type: 'button',
+      text: '주제 선택하기',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"get_topic_list"}`,
     },
-    {
-      type: 'text',
-      text:
-        '등록된 주제는 총 ' +
-        topicList.length +
-        '개 입니다. 주제를 클릭하면 자세한 정보를 보여줄게요!',
-      markdown: true,
-    },
-  ];
-
-  const footerBlock = [
-    // {
-    //   type: 'action',
-    //   elements: [
-    //     {
-    //       type: 'button',
-    //       text: '주제 더 보기',
-    //       action_type: 'submit_action',
-    //       action_name: 'load_more_topics',
-    //       value: `{"type":"mentoring"}`,
-    //     },
     {
       type: 'button',
       text: '새로 등록하기',
@@ -172,23 +191,44 @@ const generateOptionBlock = (topicList) => {
       action_type: 'call_modal',
       value: `{"type":"mentoring", "payload":"make_new_topic"}`,
     },
-    //   ],
-    // },
   ];
 
-  const topics = topicList.map((item) => ({
-    type: 'button',
-    text: item.title + ' (' + item.userIdList.length + '명)',
-    action_type: 'submit_action',
-    action_name: 'select_topic',
-    value: `{"type":"mentoring", "payload":"${item.key}"}`,
+  return block;
+};
+
+const generateOptionBlock = (topicList) => {
+  const options = topicList.map((item) => ({
+    text: item.title,
+    value: `${item.id}`,
   }));
 
-  return headerBlock.concat(topics).concat(footerBlock);
+  const block = [
+    {
+      type: 'label',
+      text: '관심 있는 주제를 선택해주세요. \n(2개 선택 가능)\n\n',
+      markdown: true,
+    },
+    {
+      type: 'select',
+      name: 'select1',
+      options: options,
+      required: true,
+      placeholder: '주제를 선택해주세요.(필수)',
+    },
+    {
+      type: 'select',
+      name: 'select2',
+      options: options,
+      required: false,
+      placeholder: '주제를 선택해주세요.',
+    },
+  ];
+
+  return block;
 };
 
 const generateSubmitBlock = (actions) => {
-  const baseBlock = [
+  const block = [
     {
       type: 'header',
       text: '멘토링 동료 찾기',
@@ -230,12 +270,20 @@ const generateSubmitBlock = (actions) => {
       text: actions.description,
       markdown: true,
     },
+    {
+      type: 'button',
+      text: '메인으로 돌아가기',
+      action_type: 'submit_action',
+      action_name: 'to_main',
+      value: '{"type": "main"}',
+      style: 'default',
+    },
   ];
-  return baseBlock;
+  return block;
 };
 
 const generateRegisterBlock = (topic) => {
-  const baseBlock = [
+  const block = [
     {
       type: 'header',
       text: '멘토링 동료 찾기',
@@ -271,12 +319,19 @@ const generateRegisterBlock = (topic) => {
       type: 'button',
       text: '다른 주제 보기',
       style: 'default',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"get_topic_list"}`,
+    },
+    {
+      type: 'button',
+      text: '메인으로 돌아가기',
       action_type: 'submit_action',
-      action_name: 'entry',
-      value: `{"type":"mentoring"}`,
+      action_name: 'to_main',
+      value: '{"type": "main"}',
+      style: 'default',
     },
   ];
-  return baseBlock;
+  return block;
 };
 
 const testGroupConversation = async (topic) => {
@@ -323,13 +378,23 @@ const testGroupConversation = async (topic) => {
 };
 
 exports.handleRequest = async (req, res, next) => {
-  const { value } = req.body;
+  const { value, action_name } = req.body;
   const payload = JSON.parse(value).payload;
   switch (payload) {
+    case 'get_topic_list':
+      return res.json({
+        view: {
+          title: '주제 선택하기',
+          accept: '확인',
+          decline: '취소',
+          value: `{"type":"mentoring", "payload":"select_topic"}`,
+          blocks: generateOptionBlock(topicList),
+        },
+      });
     case 'make_new_topic':
       return res.json({
         view: {
-          title: 'modal title',
+          title: '새 주제 등록하기',
           accept: '확인',
           decline: '취소',
           value: `{"type":"mentoring", "payload":"submit_new_topic"}`,
@@ -370,7 +435,6 @@ exports.handleRequest = async (req, res, next) => {
           ],
         },
       });
-      break;
     default:
   }
   res.json({});
@@ -379,20 +443,13 @@ exports.handleRequest = async (req, res, next) => {
 exports.handleCallback = async (req, res, next) => {
   const { message, actions, action_name, value } = req.body;
   const payload = JSON.parse(value).payload;
-  await testGroupConversation(topicList[0]);
+
   switch (action_name) {
     case 'entry':
       await libKakaoWork.sendMessage({
         conversationId: message.conversation_id,
         text: '멘토링 동료 찾기 진행중',
-        blocks: generateOptionBlock(topicList),
-      });
-      break;
-    case 'select_topic':
-      await libKakaoWork.sendMessage({
-        conversationId: message.conversation_id,
-        text: '멘토링 동료 찾기 진행중',
-        blocks: generateDetailBlock(topicList[payload]),
+        blocks: generateIntroBlock(topicList),
       });
       break;
     case 'register_topic':
@@ -410,6 +467,13 @@ exports.handleCallback = async (req, res, next) => {
             conversationId: message.conversation_id,
             text: '멘토링 동료 찾기 진행중',
             blocks: generateSubmitBlock(actions),
+          });
+          break;
+        case 'select_topic':
+          await libKakaoWork.sendMessage({
+            conversationId: message.conversation_id,
+            text: '멘토링 동료 찾기 진행중',
+            blocks: generateDetailBlock(actions),
           });
           break;
         default:
