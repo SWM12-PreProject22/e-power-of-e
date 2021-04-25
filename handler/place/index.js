@@ -1,12 +1,6 @@
 const libKakaoWork = require('../../libs/kakaoWork');
 const places = require('./places.json');
-
-const options = {
-	'entry': ['음식점', '카페'],
-	'음식점': ['한식', '중식', '일식', '양식', '야식'],
-	'일식': ['초밥', '회', '돈까스'],
-	'야식': ['피자', '치킨']
-}
+const options = require('./options.json');
 
 const generateOptionBlock = (category) => {
 	const baseBlocks = [
