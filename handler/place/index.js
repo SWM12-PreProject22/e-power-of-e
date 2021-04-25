@@ -1,4 +1,5 @@
 const libKakaoWork = require('../../libs/kakaoWork');
+const libKakaoLocal = require('../../libs/kakaoLocal');
 
 const options = {
 	'entry': ['음식점', '카페'],
@@ -39,6 +40,39 @@ const generateOptionBlock = (category) => {
     return baseBlocks.concat(buttons);
 }
 
+const generateResultBlock = (places) => {
+	const baseBlocks = [
+		{
+			type: 'header',
+			text: 'SWM12 장소찾기',
+			style: 'blue'
+		},
+		{
+			type: 'text',
+			text: '소마센터 주변의 검색 결과입니다.',
+			markdown: true
+		},
+		{
+			type: 'divider'
+		},
+	];
+	const sections = places.map((place) => 
+		({
+			type: 'section',
+			content: {
+				type: 'text',
+				text: `[${place.place_name}](${place.place_url})\n거리: ${place.distance}m`,
+				markdown: true
+			},
+			accessory: {
+				type: 'image_link',
+				url: ''
+			}
+		})
+	);
+    return baseBlocks.concat(sections);
+}
+
 exports.handleRequest = async (req, res, next) => {
 	//fill in here
   	res.json({});
@@ -54,8 +88,13 @@ exports.handleCallback = async (req, res, next) => {
 			text: '원하시는 종류의 장소를 골라주세요',
 			blocks: generateOptionBlock(payload),
 		});
-	} else {
-		//TODO: api 검색결과 보여주기
+	} else {	//최종선택지일 경우. 검색결과를 보여준다.
+		const places = await libKakaoLocal.getPlaceList(payload);
+		await libKakaoWork.sendMessage({
+			conversationId: message.conversation_id,
+			text: '소마센터 주변의 검색 결과입니다.',
+			blocks: generateResultBlock(places),
+		});
 	}
   	res.json({});
 };
