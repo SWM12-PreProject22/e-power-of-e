@@ -7,19 +7,7 @@ const placeHandler = require('../handler/place');
 const qnaHandler = require('../handler/qna');
 const mentoringHandler = require('../handler/mentoring');
 
-router.get('/', async (req, res, next) => {
-	const users = await libKakaoWork.getUserList();
-
-	const conversations = await Promise.all(
-    	users.map((user) => libKakaoWork.openConversations({ userId: user.id }))
-	);
-
-	const messages = await Promise.all([
-		conversations.map((conversation) =>
-			libKakaoWork.sendMessage({
-				conversationId: conversation.id,
-				text: 'e의e승봇',
-				blocks: [
+const mainBlocks = [
 					{
 						type: 'header',
 						text: 'SWM12',
@@ -70,7 +58,21 @@ router.get('/', async (req, res, next) => {
 						value: '{"type": "mentoring"}',
 						style: 'default'
 					}
-				],
+				];
+
+router.get('/', async (req, res, next) => {
+	const users = await libKakaoWork.getUserList();
+
+	const conversations = await Promise.all(
+    	users.map((user) => libKakaoWork.openConversations({ userId: user.id }))
+	);
+
+	const messages = await Promise.all([
+		conversations.map((conversation) =>
+			libKakaoWork.sendMessage({
+				conversationId: conversation.id,
+				text: 'e의e승봇',
+				blocks: mainBlocks,
     		})
     	),
 	]);
@@ -101,10 +103,17 @@ router.post('/request', async (req, res, next) => {
 });
 
 router.post('/callback', async (req, res, next) => {
-	const { value } = req.body;
+	const { message, value } = req.body;
 	const valueParsed = JSON.parse(value);
 	
 	switch (valueParsed.type) {
+		case 'main':
+			await libKakaoWork.sendMessage({
+					conversationId: message.conversation_id,
+					text: 'e의e승봇',
+					blocks: mainBlocks,
+				});
+			break;
 		case 'notice':
 			await noticeHandler.handleCallback(req, res, next);
 			break;
