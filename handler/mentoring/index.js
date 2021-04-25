@@ -8,7 +8,7 @@ const topicList = [
     mentor: '최길동 멘토님',
     description:
       '로렘 입숨(lorem ipsum; 줄여서 립숨, lipsum)은 출판이나 그래픽 디자인 분야에서 폰트, 타이포그래피, 레이아웃 같은 그래픽 요소나 시각적 연출을 보여줄 때 사용하는 표준 채우기 텍스트로, ',
-    userIdList: [1, 2, 3, 4],
+    userIdList: ['2604988', '2633331', '2633336'],
   },
   {
     key: 1,
@@ -43,6 +43,7 @@ const topicList = [
     userIdList: [7],
   },
 ];
+
 const generateDetailBlock = (topic) => {
   const baseBlock = [
     {
@@ -278,11 +279,52 @@ const generateRegisterBlock = (topic) => {
   return baseBlock;
 };
 
+const testGroupConversation = async (topic) => {
+  const conversation = await libKakaoWork.openGroupConversations({
+    userIds: topic.userIdList,
+  });
+  await libKakaoWork.sendMessage({
+    conversationId: conversation.id,
+    text: topic.title + ' 멘토링 매칭',
+    blocks: [
+      {
+        type: 'text',
+        text:
+          '아래 주제를 신청한 사람이 5명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.',
+        markdown: true,
+      },
+      {
+        type: 'description',
+        term: '주제',
+        content: {
+          type: 'text',
+          text: topic.title,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'description',
+        term: '희망 멘토',
+        content: {
+          type: 'text',
+          text: topic.mentor,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'text',
+        text: topic.description,
+        markdown: true,
+      },
+    ],
+  });
+};
+
 exports.handleRequest = async (req, res, next) => {
   const { value } = req.body;
   const payload = JSON.parse(value).payload;
-  console.log('REQUEST payload', payload);
-  console.log('REQUEST value', value);
   switch (payload) {
     case 'make_new_topic':
       return res.json({
@@ -337,8 +379,7 @@ exports.handleRequest = async (req, res, next) => {
 exports.handleCallback = async (req, res, next) => {
   const { message, actions, action_name, value } = req.body;
   const payload = JSON.parse(value).payload;
-  console.log('CALLBACK payload', payload);
-  console.log('CALLBACK value', value);
+  await testGroupConversation(topicList[0]);
   switch (action_name) {
     case 'entry':
       await libKakaoWork.sendMessage({

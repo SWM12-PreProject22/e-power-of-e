@@ -21,6 +21,14 @@ exports.openConversations = async ({ userId }) => {
   return res.data.conversation;
 };
 
+exports.openGroupConversations = async ({ userIds }) => {
+  const data = {
+    user_ids: userIds,
+  };
+  const res = await kakaoInstance.post('/v1/conversations.open', data);
+  return res.data.conversation;
+};
+
 exports.sendMessage = async ({ conversationId, text, blocks }) => {
   const data = {
     conversation_id: conversationId,
