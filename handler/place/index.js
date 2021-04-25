@@ -31,6 +31,7 @@ const generateOptionBlock = (category) => {
 			value: `{"type":"place", "payload":"${item}"}`
 		})
 	);
+
     return baseBlocks.concat(buttons);
 }
 
@@ -50,6 +51,7 @@ const generateResultBlock = (placesArr) => {
 			type: 'divider'
 		},
 	];
+	
 	const sections = placesArr.map((place) => 
 		({
 			type: 'section',
@@ -64,7 +66,17 @@ const generateResultBlock = (placesArr) => {
 			}
 		})
 	);
-    return baseBlocks.concat(sections);
+	
+	const toMainBtn = [{
+						type: 'button',
+						text: '메인으로 돌아가기',
+						action_type: 'submit_action',
+						action_name: 'to_main',
+						value: '{"type": "main"}',
+						style: 'default'
+					}];
+	
+    return baseBlocks.concat(sections).concat(toMainBtn);
 }
 
 exports.handleRequest = async (req, res, next) => {
@@ -74,7 +86,7 @@ exports.handleRequest = async (req, res, next) => {
 
 exports.handleCallback = async (req, res, next) => {
 	const {message, value} =req.body;
-	const payload = JSON.parse(value).payload;
+	const payload = JSON.parse(value).payload || 'entry';
 	
 	if (options[payload]) { // 세부선택지가 존재하는 경우
 		await libKakaoWork.sendMessage({

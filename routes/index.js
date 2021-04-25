@@ -51,7 +51,7 @@ router.get('/', async (req, res, next) => {
 						text: '센터주변 맛집/카페 알아보기',
 						action_type: 'submit_action',
 						action_name: 'entry',
-						value: '{"type": "place","payload":"entry"}',
+						value: '{"type": "place"}',
 						style: 'default'
 					},
 					{
