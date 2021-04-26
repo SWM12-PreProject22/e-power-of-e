@@ -1,50 +1,134 @@
+require('dotenv').config();
+
 const libKakaoWork = require('../../libs/kakaoWork');
+const fetch = require('node-fetch');
 
-const emptyList = [];
-const topicList = [
-  {
-    id: 0,
-    title: 'Spring?!',
-    mentor: '최길동 멘토님',
-    description:
-      '로렘 입숨(lorem ipsum; 줄여서 립숨, lipsum)은 출판이나 그래픽 디자인 분야에서 폰트, 타이포그래피, 레이아웃 같은 그래픽 요소나 시각적 연출을 보여줄 때 사용하는 표준 채우기 텍스트로, ',
-    userIdList: ['2604988', '2633331', '2633336'],
-  },
-  {
-    id: 1,
-    title: 'docker 기초',
-    mentor: '홍길동 멘토님',
-    description:
-      '로렘 입숨(lorem ipsum; 줄여서 립숨, lipsum)은 출판이나 그래픽 디자인 분야에서 폰트, 타이포그래피, 레이아웃 같은 그래픽 요소나 시각적 연출을 보여줄 때 사용하는 표준 채우기 텍스트로, ',
-    userIdList: [1, 2, 3, 4],
-  },
-  {
-    id: 2,
-    title: 'aws 설정',
-    mentor: '박길동 멘토님',
-    description:
-      '로렘 입숨(lorem ipsum; 줄여서 립숨, lipsum)은 출판이나 그래픽 디자인 분야에서 폰트, 타이포그래피, 레이아웃 같은 그래픽 요소나 시각적 연출을 보여줄 때 사용하는 표준 채우기 텍스트로, ',
-    userIdList: [1, 2, 3],
-  },
-  {
-    id: 3,
-    title: '멋진 개발자 되는 법',
-    mentor: '이길동 멘토님',
-    description:
-      '로렘 입숨(lorem ipsum; 줄여서 립숨, lipsum)은 출판이나 그래픽 디자인 분야에서 폰트, 타이포그래피, 레이아웃 같은 그래픽 요소나 시각적 연출을 보여줄 때 사용하는 표준 채우기 텍스트로, ',
-    userIdList: [1, 2],
-  },
-  {
-    id: 4,
-    title: 'pm은 무엇인가',
-    mentor: '김길동 멘토님',
-    description:
-      '로렘 입숨(lorem ipsum; 줄여서 립숨, lipsum)은 출판이나 그래픽 디자인 분야에서 폰트, 타이포그래피, 레이아웃 같은 그래픽 요소나 시각적 연출을 보여줄 때 사용하는 표준 채우기 텍스트로, ',
-    userIdList: [7],
-  },
-];
+const endPoint = 'https://pukuba.ga/api';
+const userNum = 5;
+const getAllTopic = async () => {
+  const query = `
+    query {
+      getAllTopic {
+        title,
+        mentor,
+        description,
+        id,
+        users{
+          id
+        }
+      }
+    }
+  `;
+  const response = await fetch(`${endPoint}?query=${query}`, {
+    method: 'GET',
+  });
+  const result = await response.json();
+  return result.data.getAllTopic;
+};
 
-const generateDetailBlock = (actions) => {
+const getTopicById = async (id) => {
+  const query = `
+    query {
+      getTopicById(id: "${id}") {
+        title,
+        mentor,
+        description,
+        users{
+          id
+        }
+        id,
+      }
+    }
+  `;
+  const response = await fetch(`${endPoint}?query=${query}`, {
+    method: 'GET',
+  });
+  const result = await response.json();
+  return result.data.getTopicById;
+};
+
+const getTopicByUserId = async (userId) => {
+  const query = `
+    query {
+      getTopicByUserId(id: "${userId}") {
+        title,
+        mentor,
+        description,
+        users{
+          id
+        }
+        id,
+      }
+    }
+  `;
+  const response = await fetch(`${endPoint}?query=${query}`, {
+    method: 'GET',
+  });
+  const result = await response.json();
+  return result.data.getTopicByUserId;
+};
+
+const addTopic = async (actions, userId) => {
+  const query = `
+        mutation {
+            addTopic(
+                title:"${actions.title}",
+                mentor:"${actions.mentor}",
+                description:"${actions.description}",
+                creater:"${userId}"
+            )
+        }
+    `;
+  const response = await fetch(endPoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: process.env.DB_TOKEN,
+    },
+    body: JSON.stringify({ query }),
+  });
+};
+
+const signTopic = async (topicId, userId) => {
+  const query = `
+        mutation {
+            signTopic(
+                topicId:"${topicId}",
+                applicant:"${userId}"
+            )
+        }
+    `;
+  const response = await fetch(endPoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: process.env.DB_TOKEN,
+    },
+    body: JSON.stringify({ query }),
+  });
+};
+
+const closeTopic = async (id) => {
+  const query = `
+        mutation {
+            closeTopic(id: "${id}") {
+              id
+            }
+        }
+    `;
+  const response = await fetch(endPoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: process.env.DB_TOKEN,
+    },
+    body: JSON.stringify({ query }),
+  });
+  const result = await response.json();
+  return result.data.closeTopic;
+};
+
+const generateDetailBlock = async (actions) => {
   const headerBlock = [
     {
       type: 'header',
@@ -52,10 +136,10 @@ const generateDetailBlock = (actions) => {
       style: 'blue',
     },
   ];
-  let topics = [topicList[actions.select1]];
-  if (actions.select2 && actions.select1 != actions.select2)
-    topics.push(topicList[actions.select2]);
-
+  let topics = [await getTopicById(actions.select1)];
+  if (actions.select2 && actions.select1 != actions.select2) {
+    topics.push(await getTopicById(actions.select2));
+  }
   var mainBlock = [];
   topics.forEach((topic) => {
     const block = [
@@ -75,6 +159,16 @@ const generateDetailBlock = (actions) => {
         content: {
           type: 'text',
           text: topic.mentor,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'description',
+        term: '등록 인원',
+        content: {
+          type: 'text',
+          text: `${topic.users.length}`,
           markdown: false,
         },
         accent: true,
@@ -136,8 +230,7 @@ const generateIntroBlock = (topicList) => {
       },
       {
         type: 'text',
-        text:
-          '멘토 특강을 신청하기 위해 주제를 등록하고 동료를 모을 수 있어요. 5명이 모이면 단톡방이 생성됩니다.',
+        text: `멘토 특강을 신청하기 위해 주제를 등록하고 동료를 모을 수 있어요. ${userNum}명이 모이면 단톡방이 생성됩니다.`,
         markdown: true,
       },
       {
@@ -175,7 +268,7 @@ const generateIntroBlock = (topicList) => {
     },
     {
       type: 'text',
-      text: `멘토 특강을 신청하기 위해 동료를 모을 수 있어요. 5명이 되면 단톡방이 생성됩니다. \n\n현재 등록된 주제는 총 ${topicList.length}개 입니다. 주제를 선택하면 자세한 정보를 보여줄게요!`,
+      text: `멘토 특강을 신청하기 위해 동료를 모을 수 있어요. ${userNum}명이 되면 단톡방이 생성됩니다. \n\n현재 등록된 주제는 총 ${topicList.length}개 입니다. 주제를 선택하면 자세한 정보를 보여줄게요!`,
       markdown: true,
     },
     {
@@ -198,7 +291,7 @@ const generateIntroBlock = (topicList) => {
 
 const generateOptionBlock = (topicList) => {
   const options = topicList.map((item) => ({
-    text: item.title,
+    text: `${item.title}(${item.users.length}명)`,
     value: `${item.id}`,
   }));
 
@@ -236,8 +329,7 @@ const generateSubmitBlock = (actions) => {
     },
     {
       type: 'text',
-      text:
-        '새 주제를 등록했습니다. 5명이 등록하면 새로운 톡방을 만들어드릴게요!',
+      text: `새 주제를 등록했습니다. ${userNum}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
       markdown: true,
     },
     {
@@ -272,6 +364,13 @@ const generateSubmitBlock = (actions) => {
     },
     {
       type: 'button',
+      text: '다른 주제 보기',
+      style: 'default',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"get_topic_list"}`,
+    },
+    {
+      type: 'button',
       text: '메인으로 돌아가기',
       action_type: 'submit_action',
       action_name: 'to_main',
@@ -282,7 +381,7 @@ const generateSubmitBlock = (actions) => {
   return block;
 };
 
-const generateRegisterBlock = (topic) => {
+const generateRegisterBlock = async (topic) => {
   const block = [
     {
       type: 'header',
@@ -312,7 +411,9 @@ const generateRegisterBlock = (topic) => {
     {
       type: 'text',
       text:
-        '위 주제의 대기열에 등록되었습니다. 5명이 등록하면 새로운 톡방을 만들어드릴게요!',
+        topic.users.length >= userNum
+          ? `위 주제에 ${userNum}명이 모여 새로운 톡방이 생성되었어요. 새로운 톡방에서 확인해보세요!`
+          : `위 주제의 대기열에 등록되었습니다. ${userNum}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
       markdown: true,
     },
     {
@@ -331,12 +432,14 @@ const generateRegisterBlock = (topic) => {
       style: 'default',
     },
   ];
+  if (topic.users.length >= userNum) await makeGroupConversation(topic);
   return block;
 };
 
-const testGroupConversation = async (topic) => {
+const makeGroupConversation = async (topic) => {
+  const userIds = topic.users.map((user) => user.id);
   const conversation = await libKakaoWork.openGroupConversations({
-    userIds: topic.userIdList,
+    userIds: userIds,
   });
   await libKakaoWork.sendMessage({
     conversationId: conversation.id,
@@ -344,8 +447,7 @@ const testGroupConversation = async (topic) => {
     blocks: [
       {
         type: 'text',
-        text:
-          '아래 주제를 신청한 사람이 5명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.',
+        text: `아래 주제를 신청한 사람이 ${userNum}명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.`,
         markdown: true,
       },
       {
@@ -375,6 +477,7 @@ const testGroupConversation = async (topic) => {
       },
     ],
   });
+  await closeTopic(topic.id);
 };
 
 exports.handleRequest = async (req, res, next) => {
@@ -388,7 +491,7 @@ exports.handleRequest = async (req, res, next) => {
           accept: '확인',
           decline: '취소',
           value: `{"type":"mentoring", "payload":"select_topic"}`,
-          blocks: generateOptionBlock(topicList),
+          blocks: generateOptionBlock(await getAllTopic()),
         },
       });
     case 'make_new_topic':
@@ -441,28 +544,28 @@ exports.handleRequest = async (req, res, next) => {
 };
 
 exports.handleCallback = async (req, res, next) => {
-  const { message, actions, action_name, value } = req.body;
+  const { message, actions, action_name, value, react_user_id } = req.body;
   const payload = JSON.parse(value).payload;
-
   switch (action_name) {
     case 'entry':
       await libKakaoWork.sendMessage({
         conversationId: message.conversation_id,
         text: '멘토링 동료 찾기 진행중',
-        blocks: generateIntroBlock(topicList),
+        blocks: generateIntroBlock(await getAllTopic()),
       });
       break;
     case 'register_topic':
-      // update db
+      await signTopic(payload, react_user_id);
       await libKakaoWork.sendMessage({
         conversationId: message.conversation_id,
         text: '멘토링 동료 찾기 진행중',
-        blocks: generateRegisterBlock(topicList[payload]),
+        blocks: await generateRegisterBlock(await getTopicById(payload)),
       });
       break;
     default:
       switch (payload) {
         case 'submit_new_topic':
+          await addTopic(actions, message.user_id);
           await libKakaoWork.sendMessage({
             conversationId: message.conversation_id,
             text: '멘토링 동료 찾기 진행중',
@@ -473,7 +576,7 @@ exports.handleCallback = async (req, res, next) => {
           await libKakaoWork.sendMessage({
             conversationId: message.conversation_id,
             text: '멘토링 동료 찾기 진행중',
-            blocks: generateDetailBlock(actions),
+            blocks: await generateDetailBlock(actions),
           });
           break;
         default:
