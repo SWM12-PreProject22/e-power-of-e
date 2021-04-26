@@ -136,62 +136,56 @@ const generateDetailBlock = async (actions) => {
       style: 'blue',
     },
   ];
-  let topics = [await getTopicById(actions.select1)];
-  if (actions.select2 && actions.select1 != actions.select2) {
-    topics.push(await getTopicById(actions.select2));
-  }
-  var mainBlock = [];
-  topics.forEach((topic) => {
-    const block = [
-      {
-        type: 'description',
-        term: '주제',
-        content: {
-          type: 'text',
-          text: topic.title,
-          markdown: false,
-        },
-        accent: true,
-      },
-      {
-        type: 'description',
-        term: '희망 멘토',
-        content: {
-          type: 'text',
-          text: topic.mentor,
-          markdown: false,
-        },
-        accent: true,
-      },
-      {
-        type: 'description',
-        term: '등록 인원',
-        content: {
-          type: 'text',
-          text: `${topic.users.length}`,
-          markdown: false,
-        },
-        accent: true,
-      },
-      {
+  let topic = await getTopicById(actions.select1);
+
+  var mainBlock = [
+    {
+      type: 'description',
+      term: '주제',
+      content: {
         type: 'text',
-        text: topic.description,
-        markdown: true,
+        text: topic.title,
+        markdown: false,
       },
-      {
-        type: 'button',
-        text: '등록하기',
-        style: 'primary',
-        action_type: 'submit_action',
-        action_name: 'register_topic',
-        value: `{"type":"mentoring", "payload":"${topic.id}"}`,
+      accent: true,
+    },
+    {
+      type: 'description',
+      term: '희망 멘토',
+      content: {
+        type: 'text',
+        text: topic.mentor,
+        markdown: false,
       },
-      {
-        type: 'divider',
+      accent: true,
+    },
+    {
+      type: 'description',
+      term: '등록 인원',
+      content: {
+        type: 'text',
+        text: `${topic.users.length}`,
+        markdown: false,
       },
-    ];
-    mainBlock = [...mainBlock, ...block];
-  });
+      accent: true,
+    },
+    {
+      type: 'text',
+      text: topic.description,
+      markdown: true,
+    },
+    {
+      type: 'button',
+      text: '등록하기',
+      style: 'primary',
+      action_type: 'submit_action',
+      action_name: 'register_topic',
+      value: `{"type":"mentoring", "payload":"${topic.id}"}`,
+    },
+    {
+      type: 'divider',
+    },
+  ];
 
   const footerBlock = [
     {
@@ -289,7 +283,10 @@ const generateIntroBlock = (topicList) => {
   return block;
 };
 
-const generateOptionBlock = (topicList) => {
+const generateOptionBlock = async (userId) => {
+  const topicList = await getAllTopic();
+  // const userTopics = await getTopicByUserId(userId);
+  // const userTopicIds = userTopics.map((topic) => topic.id);
   const options = topicList.map((item) => ({
     text: `${item.title}(${item.users.length}명)`,
     value: `${item.id}`,
@@ -298,7 +295,7 @@ const generateOptionBlock = (topicList) => {
   const block = [
     {
       type: 'label',
-      text: '관심 있는 주제를 선택해주세요. \n(2개 선택 가능)\n\n',
+      text: '관심 있는 주제를 선택해주세요.\n\n',
       markdown: true,
     },
     {
@@ -306,13 +303,6 @@ const generateOptionBlock = (topicList) => {
       name: 'select1',
       options: options,
       required: true,
-      placeholder: '주제를 선택해주세요.(필수)',
-    },
-    {
-      type: 'select',
-      name: 'select2',
-      options: options,
-      required: false,
       placeholder: '주제를 선택해주세요.',
     },
   ];
@@ -481,7 +471,7 @@ const makeGroupConversation = async (topic) => {
 };
 
 exports.handleRequest = async (req, res, next) => {
-  const { value, action_name } = req.body;
+  const { value, action_name, react_user_id } = req.body;
   const payload = JSON.parse(value).payload;
   switch (payload) {
     case 'get_topic_list':
@@ -491,7 +481,7 @@ exports.handleRequest = async (req, res, next) => {
           accept: '확인',
           decline: '취소',
           value: `{"type":"mentoring", "payload":"select_topic"}`,
-          blocks: generateOptionBlock(await getAllTopic()),
+          blocks: await generateOptionBlock(react_user_id),
         },
       });
     case 'make_new_topic':
@@ -565,7 +555,7 @@ exports.handleCallback = async (req, res, next) => {
     default:
       switch (payload) {
         case 'submit_new_topic':
-          await addTopic(actions, message.user_id);
+          await addTopic(actions, react_user_id);
           await libKakaoWork.sendMessage({
             conversationId: message.conversation_id,
             text: '멘토링 동료 찾기 진행중',
