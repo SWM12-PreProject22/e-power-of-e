@@ -1,10 +1,16 @@
 require('dotenv').config();
 
+// TODO
+// get API 에러 처리
+// 인원수 변경 (지금은 userNum으로 되어 있음 이거 수정)
+// getOptionBlock - 자기꺼 안보이게 하는 거
+// 이미 신청한 거 신청했을 때 다른 알림
+// 자기가 기존에 신청한 거 조회, 취소
+
 const libKakaoWork = require('../../libs/kakaoWork');
 const fetch = require('node-fetch');
 
 const endPoint = 'https://pukuba.ga/api';
-const userNum = 5;
 const getAllTopic = async () => {
   const query = `
     query {
@@ -13,6 +19,7 @@ const getAllTopic = async () => {
         mentor,
         description,
         id,
+        count,
         users{
           id
         }
@@ -33,10 +40,11 @@ const getTopicById = async (id) => {
         title,
         mentor,
         description,
+        id,
+        count,
         users{
           id
         }
-        id,
       }
     }
   `;
@@ -54,10 +62,11 @@ const getTopicByUserId = async (userId) => {
         title,
         mentor,
         description,
+        id,
+        count,
         users{
           id
         }
-        id,
       }
     }
   `;
@@ -75,8 +84,9 @@ const addTopic = async (actions, userId) => {
                 title:"${actions.title}",
                 mentor:"${actions.mentor}",
                 description:"${actions.description}",
+                count:${parseInt(actions.count)}
                 creater:"${userId}"
-            )
+                )
         }
     `;
   const response = await fetch(endPoint, {
@@ -136,7 +146,7 @@ const generateDetailBlock = async (actions) => {
       style: 'blue',
     },
   ];
-  let topic = await getTopicById(actions.select1);
+  let topic = await getTopicById(actions.select);
 
   var mainBlock = [
     {
@@ -164,7 +174,7 @@ const generateDetailBlock = async (actions) => {
       term: '등록 인원',
       content: {
         type: 'text',
-        text: `${topic.users.length}`,
+        text: `${topic.users.length} / ${topic.count}`,
         markdown: false,
       },
       accent: true,
@@ -224,7 +234,7 @@ const generateIntroBlock = (topicList) => {
       },
       {
         type: 'text',
-        text: `멘토 특강을 신청하기 위해 주제를 등록하고 동료를 모을 수 있어요. ${userNum}명이 모이면 단톡방이 생성됩니다.`,
+        text: `멘토 특강을 신청하기 위해 주제를 등록하고 동료를 모을 수 있어요. 신청 인원이 모이면 단톡방이 생성됩니다.`,
         markdown: true,
       },
       {
@@ -262,7 +272,7 @@ const generateIntroBlock = (topicList) => {
     },
     {
       type: 'text',
-      text: `멘토 특강을 신청하기 위해 동료를 모을 수 있어요. ${userNum}명이 되면 단톡방이 생성됩니다. \n\n현재 등록된 주제는 총 ${topicList.length}개 입니다. 주제를 선택하면 자세한 정보를 보여줄게요!`,
+      text: `멘토 특강을 신청하기 위해 동료를 모을 수 있어요. 신청 인원이 모이면 단톡방이 생성됩니다. \n\n현재 등록된 주제는 총 ${topicList.length}개 입니다. 주제를 선택하면 자세한 정보를 보여줄게요!`,
       markdown: true,
     },
     {
@@ -288,7 +298,7 @@ const generateOptionBlock = async (userId) => {
   // const userTopics = await getTopicByUserId(userId);
   // const userTopicIds = userTopics.map((topic) => topic.id);
   const options = topicList.map((item) => ({
-    text: `${item.title}(${item.users.length}명)`,
+    text: `${item.title}(${item.users.length} / ${item.count})`,
     value: `${item.id}`,
   }));
 
@@ -300,7 +310,7 @@ const generateOptionBlock = async (userId) => {
     },
     {
       type: 'select',
-      name: 'select1',
+      name: 'select',
       options: options,
       required: true,
       placeholder: '주제를 선택해주세요.',
@@ -319,7 +329,7 @@ const generateSubmitBlock = (actions) => {
     },
     {
       type: 'text',
-      text: `새 주제를 등록했습니다. ${userNum}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
+      text: `새 주제를 등록했습니다. ${actions.count}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
       markdown: true,
     },
     {
@@ -343,6 +353,16 @@ const generateSubmitBlock = (actions) => {
       content: {
         type: 'text',
         text: actions.mentor,
+        markdown: false,
+      },
+      accent: true,
+    },
+    {
+      type: 'description',
+      term: '인원',
+      content: {
+        type: 'text',
+        text: `${actions.count}`,
         markdown: false,
       },
       accent: true,
@@ -401,9 +421,9 @@ const generateRegisterBlock = async (topic) => {
     {
       type: 'text',
       text:
-        topic.users.length >= userNum
-          ? `위 주제에 ${userNum}명이 모여 새로운 톡방이 생성되었어요. 새로운 톡방에서 확인해보세요!`
-          : `위 주제의 대기열에 등록되었습니다. ${userNum}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
+        topic.users.length >= topic.count
+          ? `위 주제에 ${topic.count}명이 모여 새로운 톡방이 생성되었어요. 새로운 톡방에서 확인해보세요!`
+          : `위 주제의 대기열에 등록되었습니다. ${topic.count}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
       markdown: true,
     },
     {
@@ -422,7 +442,7 @@ const generateRegisterBlock = async (topic) => {
       style: 'default',
     },
   ];
-  if (topic.users.length >= userNum) await makeGroupConversation(topic);
+  if (topic.users.length >= topic.count) await makeGroupConversation(topic);
   return block;
 };
 
@@ -437,7 +457,7 @@ const makeGroupConversation = async (topic) => {
     blocks: [
       {
         type: 'text',
-        text: `아래 주제를 신청한 사람이 ${userNum}명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.`,
+        text: `아래 주제를 신청한 사람이 ${topic.count}명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.`,
         markdown: true,
       },
       {
@@ -524,6 +544,55 @@ exports.handleRequest = async (req, res, next) => {
               name: 'description',
               required: true,
               placeholder: '희망하는 멘토링 수업에 대해 알려주세요',
+            },
+            {
+              type: 'label',
+              text: '희망 인원',
+              markdown: true,
+            },
+            {
+              type: 'select',
+              name: 'count',
+              options: [
+                {
+                  text: '2',
+                  value: '2',
+                },
+                {
+                  text: '3',
+                  value: '3',
+                },
+                {
+                  text: '4',
+                  value: '4',
+                },
+                {
+                  text: '5',
+                  value: '5',
+                },
+                {
+                  text: '6',
+                  value: '6',
+                },
+                {
+                  text: '7',
+                  value: '7',
+                },
+                {
+                  text: '8',
+                  value: '8',
+                },
+                {
+                  text: '9',
+                  value: '9',
+                },
+                {
+                  text: '10',
+                  value: '10',
+                },
+              ],
+              required: true,
+              placeholder: '희망 인원을 선택해주세요',
             },
           ],
         },
