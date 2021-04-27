@@ -89,6 +89,9 @@ exports.blockPresets = {
         // new DividerBlock(),
         // new TextBlock('등록일: {시간}'),
         new DividerBlock(),
+		new ButtonBlock("다른 게시글 보기", "default",
+			new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_posts"}`)
+		),
         toMain
     ),
 	 post_registered: (postCount) => new BlockContainer(
