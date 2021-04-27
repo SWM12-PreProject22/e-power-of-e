@@ -20,8 +20,8 @@ exports.handleRequest = async (req, res, next) => {
 	switch (parsedValue.action) {
 		case "modal_all_posts": {
 			const data = (await gql.getAllQNA()).map((q) => {
-				const {title, content} = q;
-				cachedQNA.set(q.qnaId, {title, content});
+				const {title, content, comment} = q;
+				cachedQNA.set(q.qnaId, {title, content, comment});
 				return new SelectOption(q.title, q.qnaId);
 			});
 
@@ -32,8 +32,8 @@ exports.handleRequest = async (req, res, next) => {
 			return;
 		case "modal_my_posts": {
 			const data = (await gql.getQNAByUserId(react_user_id)).map((q) => {
-				const {title, content} = q;
-				cachedQNA.set(q.qnaId, {title, content});
+				const {title, content, comment} = q;
+				cachedQNA.set(q.qnaId, {title, content, comment});
 				return new SelectOption(q.title, q.qnaId);
 			});
 
@@ -69,11 +69,9 @@ exports.handleCallback = async (req, res, next) => {
 				await conv.sendMessage('', messages.blockPresets.no_post_found(actions.open))
 				break;
 			} else {
-				const {title, content} = post;
-				// TODO: 게시글에 답변(comment)이 있으면 답변 보기 버튼 띄우게
-				// TODO: 다른 게시글 보기 버튼
+				const {title, content, comment} = post;
 				// TODO: 내 게시글인 경우 질문 마감하기 버튼
-				conv.sendMessage('', messages.blockPresets.view_post(title, content))
+				conv.sendMessage('', messages.blockPresets.view_post(title, content, comment.length))
 					.catch((e) => {
 						console.dir(e.response.config.data);
 						console.dir(e.response.data.error);

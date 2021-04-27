@@ -6,6 +6,12 @@ exports.getAllQNA = `query {
     content
     status
     date
+	comment {
+      id
+      content
+	  qnaId
+	  commentId
+	}
   }
 }`;
 
