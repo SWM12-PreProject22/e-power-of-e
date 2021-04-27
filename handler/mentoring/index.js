@@ -2,9 +2,9 @@ require('dotenv').config();
 
 // TODO
 // get API 에러 처리
-// 인원수 변경 (지금은 userNum으로 되어 있음 이거 수정)
+// 인원수 변경 (지금은 userNum으로 되어 있음 이거 수정) - finish
 // getOptionBlock - 자기꺼 안보이게 하는 거
-// 이미 신청한 거 신청했을 때 다른 알림
+// 이미 신청한 거 신청했을 때 다른 알림 - finish
 // 자기가 기존에 신청한 거 조회, 취소
 
 const libKakaoWork = require('../../libs/kakaoWork');
@@ -138,7 +138,7 @@ const closeTopic = async (id) => {
   return result.data.closeTopic;
 };
 
-const generateDetailBlock = async (actions) => {
+const generateDetailBlock = async (actions, userId) => {
   const headerBlock = [
     {
       type: 'header',
@@ -147,56 +147,103 @@ const generateDetailBlock = async (actions) => {
     },
   ];
   let topic = await getTopicById(actions.select);
-
-  var mainBlock = [
-    {
-      type: 'description',
-      term: '주제',
-      content: {
-        type: 'text',
-        text: topic.title,
-        markdown: false,
+  var mainBlock = [];
+  if (topic.users.map((user) => user.id).includes(`${userId}`)) {
+    mainBlock = [
+      {
+        type: 'description',
+        term: '주제',
+        content: {
+          type: 'text',
+          text: topic.title,
+          markdown: false,
+        },
+        accent: true,
       },
-      accent: true,
-    },
-    {
-      type: 'description',
-      term: '희망 멘토',
-      content: {
-        type: 'text',
-        text: topic.mentor,
-        markdown: false,
+      {
+        type: 'description',
+        term: '희망 멘토',
+        content: {
+          type: 'text',
+          text: topic.mentor,
+          markdown: false,
+        },
+        accent: true,
       },
-      accent: true,
-    },
-    {
-      type: 'description',
-      term: '등록 인원',
-      content: {
-        type: 'text',
-        text: `${topic.users.length} / ${topic.count}`,
-        markdown: false,
+      {
+        type: 'description',
+        term: '등록 인원',
+        content: {
+          type: 'text',
+          text: `${topic.users.length} / ${topic.count}`,
+          markdown: false,
+        },
+        accent: true,
       },
-      accent: true,
-    },
-    {
-      type: 'text',
-      text: topic.description,
-      markdown: true,
-    },
-    {
-      type: 'button',
-      text: '등록하기',
-      style: 'primary',
-      action_type: 'submit_action',
-      action_name: 'register_topic',
-      value: `{"type":"mentoring", "payload":"${topic.id}"}`,
-    },
-    {
-      type: 'divider',
-    },
-  ];
-
+      {
+        type: 'text',
+        text: topic.description,
+        markdown: true,
+      },
+      {
+        type: 'text',
+        text: '이미 등록한 주제입니다.',
+        markdown: true,
+      },
+      {
+        type: 'divider',
+      },
+    ];
+  } else {
+    mainBlock = [
+      {
+        type: 'description',
+        term: '주제',
+        content: {
+          type: 'text',
+          text: topic.title,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'description',
+        term: '희망 멘토',
+        content: {
+          type: 'text',
+          text: topic.mentor,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'description',
+        term: '등록 인원',
+        content: {
+          type: 'text',
+          text: `${topic.users.length} / ${topic.count}`,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'text',
+        text: topic.description,
+        markdown: true,
+      },
+      {
+        type: 'button',
+        text: '등록하기',
+        style: 'primary',
+        action_type: 'submit_action',
+        action_name: 'register_topic',
+        value: `{"type":"mentoring", "payload":"${topic.id}"}`,
+      },
+      {
+        type: 'divider',
+      },
+    ];
+  }
   const footerBlock = [
     {
       type: 'button',
@@ -635,7 +682,7 @@ exports.handleCallback = async (req, res, next) => {
           await libKakaoWork.sendMessage({
             conversationId: message.conversation_id,
             text: '멘토링 동료 찾기 진행중',
-            blocks: await generateDetailBlock(actions),
+            blocks: await generateDetailBlock(actions, react_user_id),
           });
           break;
         default:
