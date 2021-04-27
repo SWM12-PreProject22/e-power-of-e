@@ -290,6 +290,13 @@ const generateMyTopicBlock = async (userId) => {
     ];
     mainBlock = [...mainBlock, ...block];
   });
+  if (mainBlock.length == 0) {
+    mainBlock.push({
+      type: 'text',
+      text: '\n현재 등록한 주제가 없습니다.\n',
+      markdown: true,
+    });
+  }
 
   const footerBlock = [
     {
