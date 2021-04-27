@@ -118,6 +118,25 @@ const signTopic = async (topicId, userId) => {
   });
 };
 
+const cancelTopic = async (topicId, userId) => {
+  const query = `
+        mutation {
+            cancleTopic(
+                topicId:"${topicId}",
+                applicant:"${userId}"
+            )
+        }
+    `;
+  const response = await fetch(endPoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: process.env.DB_TOKEN,
+    },
+    body: JSON.stringify({ query }),
+  });
+};
+
 const closeTopic = async (id) => {
   const query = `
         mutation {
@@ -136,6 +155,167 @@ const closeTopic = async (id) => {
   });
   const result = await response.json();
   return result.data.closeTopic;
+};
+
+const generateIntroBlock = (topicList) => {
+  if (topicList.length == 0) {
+    const block = [
+      {
+        type: 'header',
+        text: '멘토링 동료 찾기',
+        style: 'blue',
+      },
+      {
+        type: 'text',
+        text: `멘토 특강을 신청하기 위해 주제를 등록하고 동료를 모을 수 있어요. 신청 인원이 모이면 단톡방이 생성됩니다.`,
+        markdown: true,
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'text',
+        text: '아직 등록된 주제가 없어요. 새로운 주제를 등록해보세요!',
+        markdown: true,
+      },
+      {
+        type: 'button',
+        text: '새로 등록하기',
+        style: 'primary',
+        action_type: 'call_modal',
+        value: `{"type":"mentoring", "payload":"make_new_topic"}`,
+      },
+      {
+        type: 'button',
+        text: '메인으로 돌아가기',
+        action_type: 'submit_action',
+        action_name: 'to_main',
+        value: '{"type": "main"}',
+        style: 'default',
+      },
+    ];
+    return block;
+  }
+
+  const block = [
+    {
+      type: 'header',
+      text: '멘토링 동료 찾기',
+      style: 'blue',
+    },
+    {
+      type: 'text',
+      text: `멘토 특강을 신청하기 위해 동료를 모을 수 있어요. 신청 인원이 모이면 단톡방이 생성됩니다. \n\n현재 등록된 주제는 총 ${topicList.length}개 입니다. 주제를 선택하면 자세한 정보를 보여줄게요!`,
+      markdown: true,
+    },
+    {
+      type: 'button',
+      text: '주제 선택하기',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"get_topic_list"}`,
+    },
+    {
+      type: 'button',
+      text: '새로 등록하기',
+      style: 'default',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"make_new_topic"}`,
+    },
+    {
+      type: 'button',
+      text: '등록한 주제 조회하기',
+      style: 'default',
+      action_type: 'submit_action',
+      action_name: 'get_my_topics',
+      value: '{"type": "mentoring"}',
+    },
+  ];
+
+  return block;
+};
+
+const generateMyTopicBlock = async (userId) => {
+  const headerBlock = [
+    {
+      type: 'header',
+      text: '멘토링 동료 찾기',
+      style: 'blue',
+    },
+  ];
+  let topics = await getTopicByUserId(userId);
+  var mainBlock = [];
+  topics.forEach((topic) => {
+    const block = [
+      {
+        type: 'description',
+        term: '주제',
+        content: {
+          type: 'text',
+          text: topic.title,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'description',
+        term: '희망 멘토',
+        content: {
+          type: 'text',
+          text: topic.mentor,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'description',
+        term: '등록 인원',
+        content: {
+          type: 'text',
+          text: `${topic.users.length} / ${topic.count}`,
+          markdown: false,
+        },
+        accent: true,
+      },
+      {
+        type: 'button',
+        text: '등록 취소',
+        style: 'primary',
+        action_type: 'submit_action',
+        action_name: 'unregister_topic',
+        value: `{"type":"mentoring", "payload":"${topic.id}"}`,
+      },
+      {
+        type: 'divider',
+      },
+    ];
+    mainBlock = [...mainBlock, ...block];
+  });
+
+  const footerBlock = [
+    {
+      type: 'button',
+      text: '다른 주제 보기',
+      style: 'default',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"get_topic_list"}`,
+    },
+    {
+      type: 'button',
+      text: '새로 등록하기',
+      style: 'default',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"make_new_topic"}`,
+    },
+    {
+      type: 'button',
+      text: '메인으로 돌아가기',
+      action_type: 'submit_action',
+      action_name: 'to_main',
+      value: '{"type": "main"}',
+      style: 'default',
+    },
+  ];
+  return [...headerBlock, ...mainBlock, ...footerBlock];
 };
 
 const generateDetailBlock = async (actions, userId) => {
@@ -269,75 +449,6 @@ const generateDetailBlock = async (actions, userId) => {
     },
   ];
   return [...headerBlock, ...mainBlock, ...footerBlock];
-};
-
-const generateIntroBlock = (topicList) => {
-  if (topicList.length == 0) {
-    const block = [
-      {
-        type: 'header',
-        text: '멘토링 동료 찾기',
-        style: 'blue',
-      },
-      {
-        type: 'text',
-        text: `멘토 특강을 신청하기 위해 주제를 등록하고 동료를 모을 수 있어요. 신청 인원이 모이면 단톡방이 생성됩니다.`,
-        markdown: true,
-      },
-      {
-        type: 'divider',
-      },
-      {
-        type: 'text',
-        text: '아직 등록된 주제가 없어요. 새로운 주제를 등록해보세요!',
-        markdown: true,
-      },
-      {
-        type: 'button',
-        text: '새로 등록하기',
-        style: 'primary',
-        action_type: 'call_modal',
-        value: `{"type":"mentoring", "payload":"make_new_topic"}`,
-      },
-      {
-        type: 'button',
-        text: '메인으로 돌아가기',
-        action_type: 'submit_action',
-        action_name: 'to_main',
-        value: '{"type": "main"}',
-        style: 'default',
-      },
-    ];
-    return block;
-  }
-
-  const block = [
-    {
-      type: 'header',
-      text: '멘토링 동료 찾기',
-      style: 'blue',
-    },
-    {
-      type: 'text',
-      text: `멘토 특강을 신청하기 위해 동료를 모을 수 있어요. 신청 인원이 모이면 단톡방이 생성됩니다. \n\n현재 등록된 주제는 총 ${topicList.length}개 입니다. 주제를 선택하면 자세한 정보를 보여줄게요!`,
-      markdown: true,
-    },
-    {
-      type: 'button',
-      text: '주제 선택하기',
-      action_type: 'call_modal',
-      value: `{"type":"mentoring", "payload":"get_topic_list"}`,
-    },
-    {
-      type: 'button',
-      text: '새로 등록하기',
-      style: 'default',
-      action_type: 'call_modal',
-      value: `{"type":"mentoring", "payload":"make_new_topic"}`,
-    },
-  ];
-
-  return block;
 };
 
 const generateOptionBlock = async (userId) => {
@@ -490,6 +601,88 @@ const generateRegisterBlock = async (topic) => {
     },
   ];
   if (topic.users.length >= topic.count) await makeGroupConversation(topic);
+  return block;
+};
+
+const generateUnregisterBlock = async () => {
+  const topicList = await getAllTopic();
+
+  if (topicList.length == 0) {
+    const block = [
+      {
+        type: 'header',
+        text: '멘토링 동료 찾기',
+        style: 'blue',
+      },
+      {
+        type: 'text',
+        text: '등록이 취소되었습니다.',
+        markdown: true,
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'text',
+        text: '아직 등록된 주제가 없어요. 새로운 주제를 등록해보세요!',
+        markdown: true,
+      },
+      {
+        type: 'button',
+        text: '새로 등록하기',
+        style: 'primary',
+        action_type: 'call_modal',
+        value: `{"type":"mentoring", "payload":"make_new_topic"}`,
+      },
+      {
+        type: 'button',
+        text: '메인으로 돌아가기',
+        action_type: 'submit_action',
+        action_name: 'to_main',
+        value: '{"type": "main"}',
+        style: 'default',
+      },
+    ];
+    return block;
+  }
+
+  const block = [
+    {
+      type: 'header',
+      text: '멘토링 동료 찾기',
+      style: 'blue',
+    },
+    {
+      type: 'text',
+      text: '등록이 취소되었습니다.',
+      markdown: true,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      type: 'button',
+      text: '주제 선택하기',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"get_topic_list"}`,
+    },
+    {
+      type: 'button',
+      text: '새로 등록하기',
+      style: 'default',
+      action_type: 'call_modal',
+      value: `{"type":"mentoring", "payload":"make_new_topic"}`,
+    },
+    {
+      type: 'button',
+      text: '등록한 주제 조회하기',
+      style: 'default',
+      action_type: 'submit_action',
+      action_name: 'get_my_topics',
+      value: '{"type": "mentoring"}',
+    },
+  ];
+
   return block;
 };
 
@@ -666,6 +859,21 @@ exports.handleCallback = async (req, res, next) => {
         conversationId: message.conversation_id,
         text: '멘토링 동료 찾기 진행중',
         blocks: await generateRegisterBlock(await getTopicById(payload)),
+      });
+      break;
+    case 'get_my_topics':
+      await libKakaoWork.sendMessage({
+        conversationId: message.conversation_id,
+        text: '멘토링 동료 찾기 진행중',
+        blocks: await generateMyTopicBlock(react_user_id),
+      });
+      break;
+    case 'unregister_topic':
+      await cancleTopic(payload, react_user_id);
+      await libKakaoWork.sendMessage({
+        conversationId: message.conversation_id,
+        text: '멘토링 동료 찾기 진행중',
+        blocks: await generateUnregisterBlock(),
       });
       break;
     default:
