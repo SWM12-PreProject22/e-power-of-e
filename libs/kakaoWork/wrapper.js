@@ -8,8 +8,10 @@ const api = new KakaoWork(Config.keys.kakaoWork.bot);
     let user = 0;
     for await (const c of api.fetchConversationList())
         conv += 1;
-    for await (const u of api.fetchUserList())
+    for await (const u of api.fetchUserList()) {
+        console.log(`User: ${u.name}#${u.id}`)
         user += 1;
+    }
 
     console.log(`Fetched ${user} Users and ${conv} Conversations`)
 })();
