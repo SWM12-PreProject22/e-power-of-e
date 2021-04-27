@@ -5,7 +5,7 @@ require('dotenv').config();
 // 인원수 변경 (지금은 userNum으로 되어 있음 이거 수정) - finish
 // getOptionBlock - 자기꺼 안보이게 하는 거
 // 이미 신청한 거 신청했을 때 다른 알림 - finish
-// 자기가 기존에 신청한 거 조회, 취소
+// 자기가 기존에 신청한 거 조회, 취소 - finish
 
 const libKakaoWork = require('../../libs/kakaoWork');
 const fetch = require('node-fetch');
@@ -869,7 +869,7 @@ exports.handleCallback = async (req, res, next) => {
       });
       break;
     case 'unregister_topic':
-      await cancleTopic(payload, react_user_id);
+      await cancelTopic(payload, react_user_id);
       await libKakaoWork.sendMessage({
         conversationId: message.conversation_id,
         text: '멘토링 동료 찾기 진행중',
