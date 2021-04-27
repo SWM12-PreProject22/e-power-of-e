@@ -90,5 +90,33 @@ exports.blockPresets = {
         // new TextBlock('등록일: {시간}'),
         new DividerBlock(),
         toMain
-    )
+    ),
+	 post_registered: (postCount) => new BlockContainer(
+        'SWM12 QnA 게시판',
+        new HeaderBlock("SWM12 QnA 게시판"),
+        new TextBlock("게시글이 성공적으로 등록되었습니다!"),
+        new TextBlock(`현재 게시판에 ${postCount}개의 글이 있어요.`),
+        new DividerBlock(),
+        new TextBlock("조회하기"),
+        new ActionBlock(
+            new ButtonBlock("전체 게시글", "default",
+                new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_posts"}`)
+            ),
+            new ButtonBlock("내 게시글", "default",
+                new actions.ButtonCallModal(`{"type": "qna", "action": "modal_my_posts"}`)
+            )
+        ),
+        new TextBlock("작성하기"),
+        new ActionBlock(
+            new ButtonBlock("새 질문", "default",
+                new actions.ButtonCallModal(`{"type": "qna", "action": "new_question"}`)
+            ),
+            new ButtonBlock("새 답변", "default",
+                new actions.ButtonSubmitAction("qna_welcome", JSON.stringify(defaultEntry({
+                    action: "new_reply"
+                })))
+            )
+        ),
+        toMain
+    ),
 }

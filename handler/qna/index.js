@@ -93,10 +93,11 @@ exports.handleCallback = async (req, res, next) => {
 						console.dir(e.response.data.error);
 					})
 			}
-
-			// TODO: block 으로 바꾸기
 			else
-				await conv.sendMessage(`게시글이 등록되었습니다!`)
+				await conv.sendMessage(
+					`게시글이 성공적으로 등록되었습니다!`,
+					messages.blockPresets.post_registered((await gql.getAllQNA()).length)
+				);
 		}
 			break;
 		case undefined:
