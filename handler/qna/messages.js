@@ -69,7 +69,7 @@ exports.blockPresets = {
     ),
 	modal_all_comments: (comments) => new ModalContainer(
         '답변 보기', '확인', '취소', `{"type": "qna", "action": "do_nothing"}`,
-		...comments.map((comment) => new LabelBlock(`*익명${comment.anonymousId}님의 답변*\n${comment.content.substring(0,180)}`))
+		...comments.map((comment) => new LabelBlock(`*${comment.anonymousId}*\n${comment.content.substring(0,180)}`))
     ),
 	modal_write_comment: (qnaId) => new ModalContainer(
         '답변 작성하기', '확인', '취소', `{"type": "qna", "action": "new_comment", "qna_id": "${qnaId}"}`,

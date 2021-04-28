@@ -22,8 +22,8 @@ exports.handleRequest = async (req, res, next) => {
 	switch (parsedValue.action) {
 		case "modal_all_posts": {
 			const data = (await gql.getAllQNA()).map((q) => {
-				const {title, content, comment, qnaId} = q;
-				cachedQNA.set(q.qnaId, {title, content, comment});
+				const {title, content, comment, qnaId, id} = q;
+				cachedQNA.set(q.qnaId, {title, content, comment, id});
 				return new SelectOption(q.title, q.qnaId);
 			});
 
@@ -35,7 +35,7 @@ exports.handleRequest = async (req, res, next) => {
 		case "modal_my_posts": {
 			const data = (await gql.getQNAByUserId(react_user_id)).map((q) => {
 				const {title, content, comment} = q;
-				cachedQNA.set(q.qnaId, {title, content, comment});
+				cachedQNA.set(q.qnaId, {title, content, comment, id:react_user_id});
 				return new SelectOption(q.title, q.qnaId);
 			});
 
@@ -54,8 +54,13 @@ exports.handleRequest = async (req, res, next) => {
 			let anonymousMap = {};
 			let anonymousCnt = 1;
 			post.comment.forEach(comment => {
-				if (!anonymousMap[comment.id])
-					anonymousMap[comment.id] = anonymousCnt++;
+				if (!anonymousMap[comment.id]) {
+					if (comment.id === post.id) {
+						anonymousMap[comment.id] = '작성자';
+					} else {
+						anonymousMap[comment.id] = `익명${anonymousCnt++}`;
+					}
+				}
 				comment.anonymousId = anonymousMap[comment.id];
 			});
 			res.json({
