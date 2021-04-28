@@ -33,3 +33,12 @@ exports.writeQNA = (userId, title, text) => `mutation {
     content: "${text}"
   )
 }`;
+
+// TODO: 각 entry 에 escape 처리
+exports.writeComment = (userId, qnaId, text) => `mutation {
+  addComment (
+    id: "${userId}",
+    qnaId: "${qnaId}",
+    content: "${text}"
+  )
+}`;

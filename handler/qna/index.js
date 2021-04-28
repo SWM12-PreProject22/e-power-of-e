@@ -15,6 +15,8 @@ const cachedQNA = new Map();
 exports.handleRequest = async (req, res, next) => {
 	const {message, value, react_user_id} = req.body;
 	const parsedValue = JSON.parse(value);
+	const qnaId = parsedValue.qna_id;
+	
 	console.dir(parsedValue);
 
 	switch (parsedValue.action) {
@@ -48,7 +50,6 @@ exports.handleRequest = async (req, res, next) => {
 			});
 			return;
 		case 'modal_all_comments':
-			const qnaId = parsedValue.qna_id;
 			const post = cachedQNA.get(qnaId);
 			let anonymousMap = {};
 			let anonymousCnt = 1;
@@ -59,6 +60,11 @@ exports.handleRequest = async (req, res, next) => {
 			});
 			res.json({
 				view: mapper(messages.blockPresets.modal_all_comments(post.comment))
+			});
+			return;
+		case 'modal_write_comment':
+			res.json({
+				view: mapper(messages.blockPresets.modal_write_comment(qnaId))
 			});
 			return;
 		default:
@@ -113,6 +119,25 @@ exports.handleCallback = async (req, res, next) => {
 				);
 		}
 			break;
+		case 'new_comment': {
+			const {text} = actions;
+			const qnaId = parsedValue.qna_id;
+			const {errors, data} = await gql.writeComment(react_user_id, qnaId, text);
+
+			if (errors !== undefined) {
+				console.dir(errors)
+				await conv.sendMessage(`답변을 등록하는데 오류가 발생했습니다 ㅠㅠ`)
+					.catch((e) => {
+						console.dir(e.response.config.data);
+						console.dir(e.response.data.error);
+					})
+			}
+			else
+				await conv.sendMessage(
+					`답변이 성공적으로 등록되었습니다!`,
+					messages.blockPresets.comment_registered()
+				);
+		}
 		case 'do_nothing':
 			break;
 		case undefined:

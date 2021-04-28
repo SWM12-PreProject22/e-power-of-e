@@ -44,3 +44,11 @@ exports.writeQNA = async (userId, title, text) => {
     const { errors, data } = result;
     return { errors, data };
 }
+
+exports.writeComment = async (userId, qnaId, text) => {
+    const response = await fetcher.post(queries.writeComment(userId, qnaId, text));
+    const result = await response.json();
+
+    const { errors, data } = result;
+    return { errors, data };
+}

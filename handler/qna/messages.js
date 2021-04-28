@@ -71,6 +71,15 @@ exports.blockPresets = {
         '답변 보기', '확인', '취소', `{"type": "qna", "action": "do_nothing"}`,
 		...comments.map((comment) => new LabelBlock(`*익명${comment.anonymousId}님의 답변*\n${comment.content.substring(0,180)}`))
     ),
+	modal_write_comment: (qnaId) => new ModalContainer(
+        '답변 작성하기', '확인', '취소', `{"type": "qna", "action": "new_comment", "qna_id": "${qnaId}"}`,
+        new LabelBlock('*답변 작성하기*'),
+        new LabelBlock(
+            '모든 게시글은 모니터링되며, 부적절한 게시글은 예고 없이 삭제될 수 있습니다. ' +
+            '게시글에는 작성자의 정보가 드러나지 않으니 필요하다면 게시글에 개인정보를 담지 않게 조심해주세요.'
+        ),
+        new InputBlock('text', true, '답변을 입력해주세요 (최대 180자)\n크기가 자동으로 조절됩니다.')
+    ),
     new_question: () => new ModalContainer(
         '새 질문 작성하기', '확인', '취소', `{"type": "qna", "action": "new_question"}`,
         new LabelBlock('*새 게시글 작성하기*'),
@@ -93,14 +102,17 @@ exports.blockPresets = {
         // new DividerBlock(),
         // new TextBlock('등록일: {시간}'),
         new DividerBlock(),
-		numComments == 0
-			? new TextBlock("아직 등록된 답변이 없습니다.")
-			: new ButtonBlock(`${numComments}개의 답변 확인하기`, "default",
-					new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_comments", "qna_id": "${qnaId}"}`)
-				),
-		new ButtonBlock("다른 게시글 보기", "default",
-			new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_posts"}`)
-		),
+	    numComments == 0
+	        ? new TextBlock("아직 등록된 답변이 없습니다.")
+	        : new ButtonBlock(`${numComments}개의 답변 확인하기`, "default",
+	             new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_comments", "qna_id": "${qnaId}"}`)
+	        ),
+	    new ButtonBlock("답변 작성하기", "default",
+	        new actions.ButtonCallModal(`{"type": "qna", "action": "modal_write_comment", "qna_id": "${qnaId}"}`)
+	    ),
+	    new ButtonBlock("다른 게시글 보기", "default",
+	        new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_posts"}`)
+	    ),
         toMain
     ),
 	 post_registered: (postCount) => new BlockContainer(
@@ -131,4 +143,14 @@ exports.blockPresets = {
         ),
         toMain
     ),
+	comment_registered: () => new BlockContainer(
+        'SWM12 QnA 게시판',
+        new HeaderBlock("SWM12 QnA 게시판"),
+        new TextBlock("답변이 성공적으로 등록되었습니다!"),
+        new DividerBlock(),
+        new ButtonBlock("다른 게시글 보기", "default",
+	        new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_posts"}`)
+	    ),
+        toMain
+    )
 }
