@@ -45,16 +45,10 @@ exports.blockPresets = {
             )
         ),
         new TextBlock("작성하기"),
-        new ActionBlock(
-            new ButtonBlock("새 질문", "default",
-                new actions.ButtonCallModal(`{"type": "qna", "action": "new_question"}`)
-            ),
-            new ButtonBlock("새 답변", "default",
-                new actions.ButtonSubmitAction("qna_welcome", JSON.stringify(defaultEntry({
-                    action: "new_reply"
-                })))
-            )
-        ),
+		new ButtonBlock("새 질문", "default",
+			new actions.ButtonCallModal(`{"type": "qna", "action": "new_question"}`)
+		),
+		new DividerBlock(),
         toMain
     ),
     modal_all_posts: (posts) => new ModalContainer(
@@ -131,16 +125,10 @@ exports.blockPresets = {
             )
         ),
         new TextBlock("작성하기"),
-        new ActionBlock(
-            new ButtonBlock("새 질문", "default",
-                new actions.ButtonCallModal(`{"type": "qna", "action": "new_question"}`)
-            ),
-            new ButtonBlock("새 답변", "default",
-                new actions.ButtonSubmitAction("qna_welcome", JSON.stringify(defaultEntry({
-                    action: "new_reply"
-                })))
-            )
-        ),
+		new ButtonBlock("새 질문", "default",
+			new actions.ButtonCallModal(`{"type": "qna", "action": "new_question"}`)
+		),
+		new DividerBlock(),
         toMain
     ),
 	comment_registered: () => new BlockContainer(
