@@ -23,7 +23,7 @@ const generateIntroBlock = async () => {
 
 const generateMyTopicBlock = async (userId) => {
   let topics = await gql.getTopicByUserId(userId);
-  var mainBlock = [];
+  let mainBlock = [];
   topics.forEach((topic) => {
     const block = [
       ...blocks.topicBlockLight(topic),
@@ -41,7 +41,7 @@ const generateMyTopicBlock = async (userId) => {
     ];
     mainBlock = [...mainBlock, ...block];
   });
-  if (mainBlock.length == 0) {
+  if (mainBlock.length === 0) {
     mainBlock.push({
       type: 'text',
       text: '\n현재 등록한 주제가 없습니다.\n',
@@ -54,7 +54,7 @@ const generateMyTopicBlock = async (userId) => {
 
 const generateDetailBlock = async (actions, userId) => {
   const { error, topic } = await gql.getTopicById(actions.select);
-  var mainBlock = [];
+  let mainBlock = [];
   if (error) {
     mainBlock = blocks.errorBlock;
   } else if (topic.users.map((user) => user.id).includes(`${userId}`)) {
