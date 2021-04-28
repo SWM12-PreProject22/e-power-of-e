@@ -20,7 +20,7 @@ exports.handleRequest = async (req, res, next) => {
 	switch (parsedValue.action) {
 		case "modal_all_posts": {
 			const data = (await gql.getAllQNA()).map((q) => {
-				const {title, content, comment} = q;
+				const {title, content, comment, qnaId} = q;
 				cachedQNA.set(q.qnaId, {title, content, comment});
 				return new SelectOption(q.title, q.qnaId);
 			});
@@ -45,7 +45,21 @@ exports.handleRequest = async (req, res, next) => {
 		case 'new_question':
 			res.json({
 				view: mapper(messages.blockPresets.new_question())
-			})
+			});
+			return;
+		case 'modal_all_comments':
+			const qnaId = parsedValue.qna_id;
+			const post = cachedQNA.get(qnaId);
+			let anonymousMap = {};
+			let anonymousCnt = 1;
+			post.comment.forEach(comment => {
+				if (!anonymousMap[comment.id])
+					anonymousMap[comment.id] = anonymousCnt++;
+				comment.anonymousId = anonymousMap[comment.id];
+			});
+			res.json({
+				view: mapper(messages.blockPresets.modal_all_comments(post.comment))
+			});
 			return;
 		default:
 			res.json({});
@@ -70,8 +84,9 @@ exports.handleCallback = async (req, res, next) => {
 				break;
 			} else {
 				const {title, content, comment} = post;
+				const numComments = comment ? comment.length : 0;
 				// TODO: 내 게시글인 경우 질문 마감하기 버튼
-				conv.sendMessage('', messages.blockPresets.view_post(title, content, comment.length))
+				conv.sendMessage('', messages.blockPresets.view_post(title, content, numComments, actions.open_post))
 					.catch((e) => {
 						console.dir(e.response.config.data);
 						console.dir(e.response.data.error);
@@ -97,6 +112,8 @@ exports.handleCallback = async (req, res, next) => {
 					messages.blockPresets.post_registered((await gql.getAllQNA()).length)
 				);
 		}
+			break;
+		case 'do_nothing':
 			break;
 		case undefined:
 		default:
