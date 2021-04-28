@@ -176,19 +176,22 @@ const makeGroupConversation = async (topic) => {
   const conversation = await libKakaoWork.openGroupConversations({
     userIds: userIds,
   });
-  await libKakaoWork.sendMessage({
-    conversationId: conversation.id,
-    text: topic.title + ' 멘토링 매칭',
-    blocks: [
-      {
-        type: 'text',
-        text: `아래 주제를 신청한 사람이 ${topic.count}명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.`,
-        markdown: true,
-      },
-      ...blocks.topicBlock(topic),
-    ],
-  });
-  await gql.closeTopic(topic.id);
+  await Promise.all([
+    libKakaoWork.sendMessage({
+      conversationId: conversation.id,
+      text: topic.title + ' 멘토링 매칭',
+      blocks: [
+        {
+          type: 'text',
+          text: `아래 주제를 신청한 사람이 ${topic.count}명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.`,
+          markdown: true,
+        },
+        ...blocks.topicBlock(topic),
+      ],
+    }),
+    gql.closeTopic(topic.id)
+  ])
+
 };
 
 exports.handleRequest = async (req, res, next) => {
@@ -224,12 +227,15 @@ exports.handleCallback = async (req, res, next) => {
       });
       break;
     case 'register_topic':
-      await gql.signTopic(payload, react_user_id);
-      await libKakaoWork.sendMessage({
-        conversationId: message.conversation_id,
-        text: '멘토링 동료 찾기 진행중',
-        blocks: await generateRegisterBlock(payload),
-      });
+      const blocks = await generateRegisterBlock(payload)
+      await Promise.all([
+        gql.signTopic(payload, react_user_id),
+        libKakaoWork.sendMessage({
+          conversationId: message.conversation_id,
+          text: '멘토링 동료 찾기 진행중',
+          blocks,
+        })
+      ])
       break;
     case 'get_my_topics':
       await libKakaoWork.sendMessage({
@@ -239,22 +245,27 @@ exports.handleCallback = async (req, res, next) => {
       });
       break;
     case 'unregister_topic':
-      await gql.cancelTopic(payload, react_user_id);
-      await libKakaoWork.sendMessage({
-        conversationId: message.conversation_id,
-        text: '멘토링 동료 찾기 진행중',
-        blocks: await generateUnregisterBlock(),
-      });
+      const blocks = await generateUnregisterBlock()
+      await Promise.all([
+        gql.cancelTopic(payload, react_user_id),
+        libKakaoWork.sendMessage({
+          conversationId: message.conversation_id,
+          text: '멘토링 동료 찾기 진행중',
+          blocks
+        })
+      ])
       break;
     default:
       switch (payload) {
         case 'submit_new_topic':
-          await gql.addTopic(actions, react_user_id);
-          await libKakaoWork.sendMessage({
-            conversationId: message.conversation_id,
-            text: '멘토링 동료 찾기 진행중',
-            blocks: generateSubmitBlock(actions),
-          });
+          await Promise.all([
+            gql.addTopic(actions, react_user_id),
+            libKakaoWork.sendMessage({
+              conversationId: message.conversation_id,
+              text: '멘토링 동료 찾기 진행중',
+              blocks: generateSubmitBlock(actions),
+            })
+          ])
           break;
         case 'select_topic':
           await libKakaoWork.sendMessage({
