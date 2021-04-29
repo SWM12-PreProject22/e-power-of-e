@@ -28,7 +28,7 @@ const fetcher = {
 exports.getAllQNA = async () => {
     const response = await fetcher.get(queries.getAllQNA);
     const result = await response.json();
-    return result.data.getAllQNA;
+    return result.data.getOpenQNA;
 }
 
 exports.getQNAByUserId = async (id) => {
@@ -40,6 +40,7 @@ exports.getQNAByUserId = async (id) => {
 exports.getQNAByPostId = async (id) => {
     const response = await fetcher.get(queries.getQNAByPostId(id));
     const result = await response.json();
+    if (result.data === undefined) return undefined;
     return result.data.getIdByQNA;
 }
 
@@ -55,6 +56,14 @@ exports.writeComment = async (userId, qnaId, text) => {
     const response = await fetcher.post(queries.writeComment(userId, qnaId, text));
     const result = await response.json();
 
-    const { errors, data } = result;
-    return { errors, data };
+    const {errors, data} = result;
+    return {errors, data};
+}
+
+exports.closeQNA = async (userId, qnaId, answererId) => {
+    const response = await fetcher.post(queries.selectComment(userId, qnaId, answererId));
+    const result = await response.json();
+
+    const {errors, data} = result;
+    return {errors, data};
 }

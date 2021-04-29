@@ -1,5 +1,5 @@
 exports.getAllQNA = `query {
-  getAllQNA {
+  getOpenQNA {
     qnaId
     id
     title
@@ -54,4 +54,8 @@ exports.writeComment = (userId, qnaId, text) => `mutation {
     qnaId: ${JSON.stringify(qnaId)},
     content: ${JSON.stringify(text)}
   )
+}`;
+
+exports.selectComment = (userId, qnaId, answererId) => `mutation {
+  closeQNA(qnaId:"${qnaId}", id:"${userId}", answererId:"${answererId}")
 }`;
