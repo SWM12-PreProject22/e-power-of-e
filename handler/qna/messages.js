@@ -91,7 +91,7 @@ exports.blockPresets = {
     ),
     view_post: (title, content, numComments, qnaId) => new BlockContainer(
         'SWM12 게시글',
-        new HeaderBlock(`게시글 - ${title}`),
+        new HeaderBlock(`${title.substring(0, 20)}`),
         new TextBlock(content),
         // new DividerBlock(),
         // new TextBlock('등록일: {시간}'),
