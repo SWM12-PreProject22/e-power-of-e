@@ -1,5 +1,5 @@
 exports.getAllQNA = `query {
-  getAllQNA {
+  getOpenQNA {
     qnaId
     id
     title
@@ -9,7 +9,6 @@ exports.getAllQNA = `query {
 	comment {
       id
       content
-	  qnaId
 	  commentId
 	}
   }
@@ -25,20 +24,38 @@ exports.getQNAByUserId = (userId) => `query {
   }
 }`;
 
-// TODO: 각 entry 에 escape 처리
+exports.getQNAByPostId = (postId) => `query {
+  getIdByQNA(qnaId: "${postId}") {
+    title
+    id
+    content
+    qnaId
+    status
+    comment {
+      id
+      content
+      commentId
+    }
+    date
+  }
+}`;
+
 exports.writeQNA = (userId, title, text) => `mutation {
   addQNA(
-    id: "${userId}",
-    title: "${title}",
-    content: "${text}"
+    id: ${JSON.stringify(String(userId))},
+    title: ${JSON.stringify(title)},
+    content: ${JSON.stringify(text)}
   )
 }`;
 
-// TODO: 각 entry 에 escape 처리
 exports.writeComment = (userId, qnaId, text) => `mutation {
   addComment (
-    id: "${userId}",
-    qnaId: "${qnaId}",
-    content: "${text}"
+    id: ${JSON.stringify(String(userId))},
+    qnaId: ${JSON.stringify(qnaId)},
+    content: ${JSON.stringify(text)}
   )
+}`;
+
+exports.selectComment = (userId, qnaId, answererId) => `mutation {
+  closeQNA(qnaId:"${qnaId}", id:"${userId}", answererId:"${answererId}")
 }`;
