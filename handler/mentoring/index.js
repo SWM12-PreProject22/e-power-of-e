@@ -23,7 +23,7 @@ const generateIntroBlock = async () => {
 
 const generateMyTopicBlock = async (userId) => {
   let topics = await gql.getTopicByUserId(userId);
-  var mainBlock = [];
+  let mainBlock = [];
   topics.forEach((topic) => {
     const block = [
       ...blocks.topicBlockLight(topic),
@@ -41,7 +41,7 @@ const generateMyTopicBlock = async (userId) => {
     ];
     mainBlock = [...mainBlock, ...block];
   });
-  if (mainBlock.length == 0) {
+  if (mainBlock.length === 0) {
     mainBlock.push({
       type: 'text',
       text: '\n현재 등록한 주제가 없습니다.\n',
@@ -54,12 +54,12 @@ const generateMyTopicBlock = async (userId) => {
 
 const generateDetailBlock = async (actions, userId) => {
   const { error, topic } = await gql.getTopicById(actions.select);
-  var mainBlock = [];
+  let mainBlock = [];
   if (error) {
     mainBlock = blocks.errorBlock;
-  } else if (topic.users.map((user) => user.id).includes(`${userId}`)) {
+  } else if (topic.getTopicById.users.map((user) => user.id).includes(`${userId}`)) {
     mainBlock = [
-      ...blocks.topicBlock(topic),
+      ...blocks.topicBlock(topic.getTopicById),
       {
         type: 'text',
         text: '이미 등록한 주제입니다.',
@@ -71,14 +71,14 @@ const generateDetailBlock = async (actions, userId) => {
     ];
   } else {
     mainBlock = [
-      ...blocks.topicBlock(topic),
+      ...blocks.topicBlock(topic.getTopicById),
       {
         type: 'button',
         text: '등록하기',
         style: 'primary',
         action_type: 'submit_action',
         action_name: 'register_topic',
-        value: `{"type":"mentoring", "payload":"${topic.id}"}`,
+        value: `{"type":"mentoring", "payload":"${topic.getTopicById.id}"}`, //fix
       },
       {
         type: 'divider',
@@ -138,18 +138,18 @@ const generateRegisterBlock = async (topicId) => {
     return blocks.errorBlock;
   }
   const block = [
-    ...blocks.topicBlock(topic),
+    ...blocks.topicBlock(topic.getTopicById),
     {
       type: 'text',
       text:
-        topic.users.length >= topic.count
-          ? `위 주제에 ${topic.count}명이 모여 새로운 톡방이 생성되었어요. 새로운 톡방에서 확인해보세요!`
-          : `위 주제의 대기열에 등록되었습니다. ${topic.count}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
+        topic.getTopicById.users.length >= topic.getTopicById.count
+          ? `위 주제에 ${topic.getTopicById.count}명이 모여 새로운 톡방이 생성되었어요. 새로운 톡방에서 확인해보세요!`
+          : `위 주제의 대기열에 등록되었습니다. ${topic.getTopicById.count}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
       markdown: true,
     },
     ...blocks.footerBlock,
   ];
-  if (topic.users.length >= topic.count) await makeGroupConversation(topic);
+  if (topic.getTopicById.users.length >= topic.getTopicById.count) await makeGroupConversation(topic.getTopicById);
   return block;
 };
 
@@ -176,19 +176,22 @@ const makeGroupConversation = async (topic) => {
   const conversation = await libKakaoWork.openGroupConversations({
     userIds: userIds,
   });
-  await libKakaoWork.sendMessage({
-    conversationId: conversation.id,
-    text: topic.title + ' 멘토링 매칭',
-    blocks: [
-      {
-        type: 'text',
-        text: `아래 주제를 신청한 사람이 ${topic.count}명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.`,
-        markdown: true,
-      },
-      ...blocks.topicBlock(topic),
-    ],
-  });
-  await gql.closeTopic(topic.id);
+  await Promise.all([
+    libKakaoWork.sendMessage({
+      conversationId: conversation.id,
+      text: topic.title + ' 멘토링 매칭',
+      blocks: [
+        {
+          type: 'text',
+          text: `아래 주제를 신청한 사람이 ${topic.count}명이 되었어요! 톡방에서 일정을 잡아 멘토링을 진행하세요.`,
+          markdown: true,
+        },
+        ...blocks.topicBlock(topic),
+      ],
+    }),
+    gql.closeTopic(topic.id)
+  ])
+
 };
 
 exports.handleRequest = async (req, res, next) => {
@@ -249,12 +252,14 @@ exports.handleCallback = async (req, res, next) => {
     default:
       switch (payload) {
         case 'submit_new_topic':
-          await gql.addTopic(actions, react_user_id);
-          await libKakaoWork.sendMessage({
-            conversationId: message.conversation_id,
-            text: '멘토링 동료 찾기 진행중',
-            blocks: generateSubmitBlock(actions),
-          });
+          await Promise.all([
+            gql.addTopic(actions, react_user_id),
+            libKakaoWork.sendMessage({
+              conversationId: message.conversation_id,
+              text: '멘토링 동료 찾기 진행중',
+              blocks: generateSubmitBlock(actions),
+            })
+          ])
           break;
         case 'select_topic':
           await libKakaoWork.sendMessage({
