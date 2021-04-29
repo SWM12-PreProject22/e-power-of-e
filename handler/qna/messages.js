@@ -71,7 +71,8 @@ exports.blockPresets = {
         new SelectBlock(
             'info',
             comments.map((c) => new SelectOption(`(${c.anonymousId}) ${c.content.substring(0, 60)}`,
-                JSON.stringify({userId, postId, answererId: c.id, commentHead: c.content.substring(0, 180)})))
+                JSON.stringify({userId, postId, answererId: c.id, commentHead: c.content.substring(0, 180)}))),
+            true, '답변을 선택해주세요'
         )
     ),
     select_comment_success: (postTitle, commentHead) => new BlockContainer(
