@@ -59,14 +59,41 @@ exports.topicBlockLight = (topic) => [
   },
 ];
 
-exports.errorBlock = [
+exports.errorBlock = (message) => [
+  {
+    type: 'header',
+    text: '멘토링 동료 찾기',
+    style: 'blue',
+  },
   {
     type: 'text',
-    text: '에러가 발생했습니다. 다시 시도해주세요.',
+    text: `${message}`,
     markdown: true,
   },
   {
     type: 'divider',
+  },
+  {
+    type: 'button',
+    text: '등록된 주제 보기',
+    style: 'default',
+    action_type: 'call_modal',
+    value: `{"type":"mentoring", "payload":"get_topic_list"}`,
+  },
+  {
+    type: 'button',
+    text: '새로 등록하기',
+    style: 'default',
+    action_type: 'call_modal',
+    value: `{"type":"mentoring", "payload":"make_new_topic"}`,
+  },
+  {
+    type: 'button',
+    text: '메인으로 돌아가기',
+    action_type: 'submit_action',
+    action_name: 'to_main',
+    value: '{"type": "main"}',
+    style: 'default',
   },
 ];
 exports.headerBlock = {

@@ -56,14 +56,26 @@ const generateDetailBlock = async (actions, userId) => {
   const { error, topic } = await gql.getTopicById(actions.select);
   let mainBlock = [];
   if (error) {
-    mainBlock = blocks.errorBlock;
-  } else if (topic.getTopicById.users.map((user) => user.id).includes(`${userId}`)) {
+    return blocks.errorBlock(
+      '이미 주제가 마감되어 요청한 동작을 수행할 수 없습니다.'
+    );
+  } else if (
+    topic.getTopicById.users.map((user) => user.id).includes(`${userId}`)
+  ) {
     mainBlock = [
       ...blocks.topicBlock(topic.getTopicById),
       {
         type: 'text',
         text: '이미 등록한 주제입니다.',
         markdown: true,
+      },
+      {
+        type: 'button',
+        text: '등록 취소',
+        style: 'primary',
+        action_type: 'submit_action',
+        action_name: 'unregister_topic',
+        value: `{"type":"mentoring", "payload":"${topic.getTopicById.id}"}`,
       },
       {
         type: 'divider',
@@ -78,7 +90,7 @@ const generateDetailBlock = async (actions, userId) => {
         style: 'primary',
         action_type: 'submit_action',
         action_name: 'register_topic',
-        value: `{"type":"mentoring", "payload":"${topic.getTopicById.id}"}`, //fix
+        value: `{"type":"mentoring", "payload":"${topic.getTopicById.id}"}`,
       },
       {
         type: 'divider',
@@ -132,24 +144,21 @@ const generateSubmitBlock = (actions) => {
   ];
 };
 
-const generateRegisterBlock = async (topicId) => {
-  const { error, topic } = await gql.getTopicById(topicId);
-  if (error) {
-    return blocks.errorBlock;
-  }
+const generateRegisterBlock = async (topic) => {
   const block = [
-    ...blocks.topicBlock(topic.getTopicById),
+    blocks.headerBlock,
+    ...blocks.topicBlock(topic),
     {
       type: 'text',
       text:
-        topic.getTopicById.users.length >= topic.getTopicById.count
-          ? `위 주제에 ${topic.getTopicById.count}명이 모여 새로운 톡방이 생성되었어요. 새로운 톡방에서 확인해보세요!`
-          : `위 주제의 대기열에 등록되었습니다. ${topic.getTopicById.count}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
+        topic.users.length >= topic.count
+          ? `위 주제에 ${topic.count}명이 모여 새로운 톡방이 생성되었어요. 새로운 톡방에서 확인해보세요!`
+          : `위 주제의 대기열에 등록되었습니다. ${topic.count}명이 등록하면 새로운 톡방을 만들어드릴게요!`,
       markdown: true,
     },
     ...blocks.footerBlock,
   ];
-  if (topic.getTopicById.users.length >= topic.getTopicById.count) await makeGroupConversation(topic.getTopicById);
+  if (topic.users.length >= topic.count) await makeGroupConversation(topic);
   return block;
 };
 
@@ -189,9 +198,8 @@ const makeGroupConversation = async (topic) => {
         ...blocks.topicBlock(topic),
       ],
     }),
-    gql.closeTopic(topic.id)
-  ])
-
+    gql.closeTopic(topic.id),
+  ]);
 };
 
 exports.handleRequest = async (req, res, next) => {
@@ -226,14 +234,25 @@ exports.handleCallback = async (req, res, next) => {
         blocks: await generateIntroBlock(),
       });
       break;
-    case 'register_topic':
-      await gql.signTopic(payload, react_user_id);
-      await libKakaoWork.sendMessage({
-        conversationId: message.conversation_id,
-        text: '멘토링 동료 찾기 진행중',
-        blocks: await generateRegisterBlock(payload),
-      });
+    case 'register_topic': {
+      let { errors, data } = await gql.signTopic(payload, react_user_id);
+      if (errors) {
+        await libKakaoWork.sendMessage({
+          conversationId: message.conversation_id,
+          text: '멘토링 동료 찾기 진행중',
+          blocks: blocks.errorBlock(
+            '이미 주제가 마감되어 요청한 동작을 수행할 수 없습니다.'
+          ),
+        });
+      } else {
+        await libKakaoWork.sendMessage({
+          conversationId: message.conversation_id,
+          text: '멘토링 동료 찾기 진행중',
+          blocks: await generateRegisterBlock(data.signTopic),
+        });
+      }
       break;
+    }
     case 'get_my_topics':
       await libKakaoWork.sendMessage({
         conversationId: message.conversation_id,
@@ -241,14 +260,25 @@ exports.handleCallback = async (req, res, next) => {
         blocks: await generateMyTopicBlock(react_user_id),
       });
       break;
-    case 'unregister_topic':
-      await gql.cancelTopic(payload, react_user_id);
-      await libKakaoWork.sendMessage({
-        conversationId: message.conversation_id,
-        text: '멘토링 동료 찾기 진행중',
-        blocks: await generateUnregisterBlock(),
-      });
+    case 'unregister_topic': {
+      let { errors, data } = await gql.cancelTopic(payload, react_user_id);
+      if (!data.cancelTopic) {
+        await libKakaoWork.sendMessage({
+          conversationId: message.conversation_id,
+          text: '멘토링 동료 찾기 진행중',
+          blocks: blocks.errorBlock(
+            '이미 채팅방이 생성되어 요청한 동작을 수행할 수 없습니다.'
+          ),
+        });
+      } else {
+        await libKakaoWork.sendMessage({
+          conversationId: message.conversation_id,
+          text: '멘토링 동료 찾기 진행중',
+          blocks: await generateUnregisterBlock(),
+        });
+      }
       break;
+    }
     default:
       switch (payload) {
         case 'submit_new_topic':
@@ -258,8 +288,8 @@ exports.handleCallback = async (req, res, next) => {
               conversationId: message.conversation_id,
               text: '멘토링 동료 찾기 진행중',
               blocks: generateSubmitBlock(actions),
-            })
-          ])
+            }),
+          ]);
           break;
         case 'select_topic':
           await libKakaoWork.sendMessage({
