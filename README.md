@@ -46,9 +46,10 @@
 |<img src="/image/qnaMain.png" width = "200" >|<img src="/image/qnaList.png" width = "200" >|<img src="/image/qnaQuestionView.PNG" width = "200" >|<img src="/image/qnaAnswer.png" width = "200" >|<img src="/image/qnaAnswerView.jpg" width = "200" > |  
 * 답변 작성을 계속 하여 원하는 답변을 얻을 때까지 여러 연수생들의 도움을 받을 수 있습니다.
    
-|메인|조회 - 내 게시글|
-|---|---|
-|<img src="/image/qnaMain.png" width = "200" >|<img src="/image/qnaMyList.png" width = "200" >|
+|메인|조회 - 내 게시글|게시글 선택 후 채택하기|채택완료|
+|---|---|---|---|
+|<img src="/image/qnaMain.png" width = "200" >|<img src="/image/qnaMyList.png" width = "200" >|<img src="/image/qnaMyQuestionView.PNG" width = "200" >|<img src="/image/qnaFinished.PNG" width = "200" >|  
+* 내 질문에 답변이 등록되면 채택이 가능하고, 채택된 질문은 질문 리스트에서 사라집니다.
 
 |메인|새 질문 작성|
 |---|---|
