@@ -96,17 +96,19 @@ exports.blockPresets = {
         // new DividerBlock(),
         // new TextBlock('등록일: {시간}'),
         new DividerBlock(),
-	    numComments == 0
-	        ? new TextBlock("아직 등록된 답변이 없습니다.")
-	        : new ButtonBlock(`${numComments}개의 답변 확인하기`, "default",
-	             new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_comments", "qna_id": "${qnaId}"}`)
-	        ),
-	    new ButtonBlock("답변 작성하기", "default",
-	        new actions.ButtonCallModal(`{"type": "qna", "action": "modal_write_comment", "qna_id": "${qnaId}"}`)
-	    ),
-	    new ButtonBlock("다른 게시글 보기", "default",
-	        new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_posts"}`)
-	    ),
+        numComments == 0
+            ? new TextBlock("아직 등록된 답변이 없습니다.")
+            : new ButtonBlock(`${numComments}개의 답변`, "default",
+            new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_comments", "qna_id": "${qnaId}"}`)
+            ),
+        new ActionBlock(
+            new ButtonBlock("답변 작성", "default",
+                new actions.ButtonCallModal(`{"type": "qna", "action": "modal_write_comment", "qna_id": "${qnaId}"}`)
+            ),
+            new ButtonBlock("다른 게시글", "default",
+                new actions.ButtonCallModal(`{"type": "qna", "action": "modal_all_posts"}`)
+            )
+        ),
         toMain
     ),
 	 post_registered: (postCount) => new BlockContainer(

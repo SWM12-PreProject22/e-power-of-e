@@ -37,12 +37,18 @@ exports.getQNAByUserId = async (id) => {
     return result.data.getMyQNA;
 }
 
+exports.getQNAByPostId = async (id) => {
+    const response = await fetcher.get(queries.getQNAByPostId(id));
+    const result = await response.json();
+    return result.data.getIdByQNA;
+}
+
 exports.writeQNA = async (userId, title, text) => {
     const response = await fetcher.post(queries.writeQNA(userId, title, text));
     const result = await response.json();
 
-    const { errors, data } = result;
-    return { errors, data };
+    const {errors, data} = result;
+    return {errors, data};
 }
 
 exports.writeComment = async (userId, qnaId, text) => {

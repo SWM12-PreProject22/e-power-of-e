@@ -16,7 +16,7 @@ exports.handleRequest = async (req, res, next) => {
 	const {message, value, react_user_id} = req.body;
 	const parsedValue = JSON.parse(value);
 	const qnaId = parsedValue.qna_id;
-	
+
 	console.dir(parsedValue);
 
 	switch (parsedValue.action) {
@@ -50,7 +50,7 @@ exports.handleRequest = async (req, res, next) => {
 			});
 			return;
 		case 'modal_all_comments':
-			const post = cachedQNA.get(qnaId);
+			const post = await gql.getQNAByPostId(qnaId);
 			let anonymousMap = {};
 			let anonymousCnt = 1;
 			post.comment.forEach(comment => {
@@ -89,7 +89,8 @@ exports.handleCallback = async (req, res, next) => {
 	switch (parsedValue.action) {
 		case "modal_all_posts":
 		case "modal_my_posts": {
-			const post = cachedQNA.get(actions.open_post);
+			const post = await gql.getQNAByPostId(actions.open_post);
+			// const post = cachedQNA.get(actions.open_post);
 			if (post === undefined) {
 				await conv.sendMessage('', messages.blockPresets.no_post_found(actions.open))
 				break;
