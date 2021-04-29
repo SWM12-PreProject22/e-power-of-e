@@ -14,7 +14,7 @@ exports.topicBlock = (topic) => [
     term: '희망 멘토',
     content: {
       type: 'text',
-      text: `${topic.mentor}`,
+      text: JSON.stringify(topic.mentor),
       markdown: false,
     },
     accent: true,
@@ -31,7 +31,7 @@ exports.topicBlock = (topic) => [
   },
   {
     type: 'text',
-    text: `${topic.description}`,
+    text: JSON.stringify(topic.description),
     markdown: true,
   },
 ];
@@ -42,7 +42,7 @@ exports.topicBlockLight = (topic) => [
     term: '주제',
     content: {
       type: 'text',
-      text: `${topic.title}`,
+      text: JSON.stringify(topic.title),
       markdown: false,
     },
     accent: true,
@@ -67,7 +67,7 @@ exports.errorBlock = (message) => [
   },
   {
     type: 'text',
-    text: `${message}`,
+    text: JSON.stringify(message),
     markdown: true,
   },
   {
