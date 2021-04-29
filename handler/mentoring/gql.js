@@ -90,7 +90,7 @@ exports.addTopic = async (actions, userId) => {
         mentor:"${actions.mentor}",
         description:"${actions.description}",
         count:${parseInt(actions.count)}
-        creater:"${userId}"
+        creator:"${userId}"
         )
 }`);
   const result = await response.json();
@@ -114,7 +114,7 @@ exports.signTopic = async (topicId, userId) => {
 
 exports.cancelTopic = async (topicId, userId) => {
   const response = await fetcher.post(`mutation {
-    cancleTopic(
+    cancelTopic(
         topicId:"${topicId}",
         applicant:"${userId}"
     )
@@ -127,11 +127,10 @@ exports.cancelTopic = async (topicId, userId) => {
 
 exports.closeTopic = async (topicId) => {
   const response = await fetcher.post(`mutation {
-	closeTopic(id: "${topicId}") {
-		id
-	}
-}`);
+	closeTopic(id: "${topicId}")
+}`)
   const result = await response.json();
+
   const { errors, data } = result;
   return { errors, data };
 };

@@ -35,6 +35,7 @@ exports.topicBlock = (topic) => [
     markdown: true,
   },
 ];
+
 exports.topicBlockLight = (topic) => [
   {
     type: 'description',
