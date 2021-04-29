@@ -43,7 +43,7 @@
 
 |메인|조회 - 전체 게시글|게시글 선택|답변 작성하기|답변 확인하기|
 |---|---|---|---|---|
-|<img src="/image/qnaMain.png" width = "200" >|<img src="/image/qnaList.png" width = "200" >|<img src="/image/qnaQuestionView.PNG" width = "200" >|<img src="/image/qnaAnswer.png" width = "200" >|<img src="/image/mentoringAnswerView.jpg" width = "200" > |  
+|<img src="/image/qnaMain.png" width = "200" >|<img src="/image/qnaList.png" width = "200" >|<img src="/image/qnaQuestionView.PNG" width = "200" >|<img src="/image/qnaAnswer.png" width = "200" >|<img src="/image/qnaAnswerView.jpg" width = "200" > |  
 * 답변 작성을 계속 하여 원하는 답변을 얻을 때까지 여러 연수생들의 도움을 받을 수 있습니다.
    
 |메인|조회 - 내 게시글|
