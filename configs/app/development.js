@@ -10,6 +10,6 @@ module.exports = {
     }
   },
   hosts: {
-    qna_gql: "https://pukuba.ga/api"
+    qna_gql: "https://vvhtzbmdvztw6581595.cdn.ntruss.com/api"
   }
 };
