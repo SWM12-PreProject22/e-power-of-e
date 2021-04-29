@@ -103,6 +103,17 @@ const generateDetailBlock = async (actions, userId) => {
 
 const generateOptionBlock = async () => {
   const topicList = await gql.getAllTopic();
+  if (topicList.length == 0) {
+    return [
+      {
+        type: 'label',
+        text:
+          '열려있는 주제가 모두 마감되었습니다. \n확인을 눌러 다른 동작을 진행해주세요.',
+        markdown: true,
+      },
+    ];
+  }
+
   const options = topicList.map((item) => ({
     text: `${item.title}(${item.users.length} / ${item.count})`,
     value: `${item.id}`,
@@ -292,11 +303,19 @@ exports.handleCallback = async (req, res, next) => {
           ]);
           break;
         case 'select_topic':
-          await libKakaoWork.sendMessage({
-            conversationId: message.conversation_id,
-            text: '멘토링 동료 찾기 진행중',
-            blocks: await generateDetailBlock(actions, react_user_id),
-          });
+          if ('select' in actions) {
+            await libKakaoWork.sendMessage({
+              conversationId: message.conversation_id,
+              text: '멘토링 동료 찾기 진행중',
+              blocks: await generateDetailBlock(actions, react_user_id),
+            });
+          } else {
+            await libKakaoWork.sendMessage({
+              conversationId: message.conversation_id,
+              text: '멘토링 동료 찾기 진행중',
+              blocks: await generateIntroBlock(),
+            });
+          }
           break;
         default:
       }
