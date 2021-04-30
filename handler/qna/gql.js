@@ -40,7 +40,7 @@ exports.getQNAByUserId = async (id) => {
 exports.getQNAByPostId = async (id) => {
     const response = await fetcher.get(queries.getQNAByPostId(id));
     const result = await response.json();
-    if (result.data === undefined) return undefined;
+    if (result.data === undefined || result.data === null) return undefined;
     return result.data.getIdByQNA;
 }
 
