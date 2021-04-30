@@ -74,7 +74,7 @@ router.post('/chatbot', async (req, res, next) => {
     conversations.map((conversation) =>
         libKakaoWork.sendMessage({
           conversationId: conversation.id,
-          text: 'e의e승봇',
+          text: '[ e의e승팀 ] 저만큼 유용한 챗봇은 없을걸요? SW마에스트로의 모든 것!',
           blocks: mainBlocks,
         })
     ),
@@ -112,7 +112,7 @@ router.post('/callback', async (req, res, next) => {
     case 'main':
       await libKakaoWork.sendMessage({
         conversationId: message.conversation_id,
-        text: 'e의e승봇',
+        text: '[ e의e승팀 ] 저만큼 유용한 챗봇은 없을걸요? SW마에스트로의 모든 것!',
         blocks: mainBlocks,
       });
       res.json({});
