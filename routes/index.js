@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
+const {api} = require('../libs/kakaoWork/wrapper');
 const libKakaoWork = require('../libs/kakaoWork');
 const noticeHandler = require('../handler/notice');
 const placeHandler = require('../handler/place');
@@ -60,20 +61,22 @@ const mainBlocks = [
   },
 ];
 
-router.get('/', async (req, res, next) => {
-  const users = await libKakaoWork.getUserList();
+router.post('/chatbot', async (req, res, next) => {
+  const wrUserList = [];
+  for await (const u of api.fetchUserList())
+    wrUserList.push(u)
 
   const conversations = await Promise.all(
-    users.map((user) => libKakaoWork.openConversations({ userId: user.id }))
+      wrUserList.map((user) => libKakaoWork.openConversations({userId: user.id}))
   );
 
   const messages = await Promise.all([
     conversations.map((conversation) =>
-      libKakaoWork.sendMessage({
-        conversationId: conversation.id,
-        text: 'e의e승봇',
-        blocks: mainBlocks,
-      })
+        libKakaoWork.sendMessage({
+          conversationId: conversation.id,
+          text: 'e의e승봇',
+          blocks: mainBlocks,
+        })
     ),
   ]);
 
